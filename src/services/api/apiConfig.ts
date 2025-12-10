@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   baseURL: import.meta.env.DEV
     ? 'http://localhost:7071/api/v1'
-    : 'https://soydani-back-csf6gmejcfdwdygu.centralus-01.azurewebsites.net/api/v1',
+    : 'https://angelie-back-bafqgcdfcub7arbv.centralus-01.azurewebsites.net/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -45,7 +45,11 @@ export class ApiClient {
 
     // Obtener token del localStorage si existe
     const token = localStorage.getItem('authToken')
-    console.log('🔑 [apiClient] Token presente:', token ? '✅ Sí' : '❌ No', token ? `(${token.substring(0, 20)}...)` : '')
+    console.log(
+      '🔑 [apiClient] Token presente:',
+      token ? '✅ Sí' : '❌ No',
+      token ? `(${token.substring(0, 20)}...)` : '',
+    )
 
     // Preparar headers
     let headers = { ...this.defaultHeaders }
