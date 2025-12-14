@@ -1,5 +1,5 @@
 <template>
-  <section class="videos-section">
+  <section ref="sectionEl" class="videos-section">
     <div class="container">
       <header class="header">
         <h2 class="title">{{ t('videos.title') }}</h2>
@@ -25,27 +25,31 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 type TikTokVideo = { id: string; url: string }
 
 const videos: TikTokVideo[] = [
-  // {
-  //   id: '7564589333794098450',
-  //   url: 'https://www.tiktok.com/@joyeria_angelie/video/7564589333794098450'
-  // },
-  // {
-  //   id: '7566079307521543431',
-  //   url: 'https://www.tiktok.com/@joyeria_angelie/video/7566079307521543431'
-  // },
-  // {
-  //   id: '7528947477798505784',
-  //   url: 'https://www.tiktok.com/@joyeria_angelie/video/7528947477798505784'
-  // }
+  {
+    id: '7564589333794098450',
+    url: 'https://www.tiktok.com/@joyeria_angelie/video/7564589333794098450'
+  },
+  {
+    id: '7566079307521543431',
+    url: 'https://www.tiktok.com/@joyeria_angelie/video/7566079307521543431'
+  },
+  {
+    id: '7528947477798505784',
+    url: 'https://www.tiktok.com/@joyeria_angelie/video/7528947477798505784'
+  }
 ]
 
 const { t } = useI18n()
+
+const sectionEl = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+let didLoadTikTok = false
 
 function ensureTikTokScriptLoaded(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -70,11 +74,43 @@ function ensureTikTokScriptLoaded(): Promise<void> {
 }
 
 onMounted(async () => {
-  try {
-    await ensureTikTokScriptLoaded()
-  } catch {
-    // Si TikTok bloquea la carga, igual dejamos los enlaces.
+  // Si no hay videos, no cargamos nada de TikTok.
+  if (videos.length === 0) return
+  if (typeof window === 'undefined') return
+
+  const loadOnce = async () => {
+    if (didLoadTikTok) return
+    didLoadTikTok = true
+    try {
+      await ensureTikTokScriptLoaded()
+    } catch {
+      // Si TikTok bloquea la carga, igual dejamos los enlaces.
+    }
   }
+
+  // Cargar solo cuando el bloque entra al viewport (evita bloquear el render inicial).
+  if ('IntersectionObserver' in window && sectionEl.value) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          observer?.disconnect()
+          observer = null
+          void loadOnce()
+        }
+      },
+      { root: null, rootMargin: '200px', threshold: 0.01 },
+    )
+    observer.observe(sectionEl.value)
+    return
+  }
+
+  // Fallback: cargar en idle-ish.
+  window.setTimeout(() => void loadOnce(), 0)
+})
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  observer = null
 })
 </script>
 

@@ -56,21 +56,7 @@ const initializeFromStorage = () => {
 // Limpiar reservas expiradas
 const cleanExpiredReservations = () => {
   const now = Date.now()
-  const initialCount = reservedNumbers.value.length
-
-  reservedNumbers.value = reservedNumbers.value.filter((reservation) => {
-    if (reservation.expiresAt > now) {
-      return true
-    } else {
-      console.log(`⏰ Reserva expirada liberada: número ${reservation.number}`)
-      return false
-    }
-  })
-
-  const expiredCount = initialCount - reservedNumbers.value.length
-  if (expiredCount > 0) {
-    console.log(`🔄 Se liberaron ${expiredCount} números por expiración`)
-  }
+  reservedNumbers.value = reservedNumbers.value.filter((reservation) => reservation.expiresAt > now)
 }
 
 // Watchers para persistir solo las reservas en localStorage (números tomados vienen de la API)
@@ -82,8 +68,13 @@ watch(
   { deep: true },
 )
 
-// Limpiar reservas expiradas cada 30 segundos
-setInterval(cleanExpiredReservations, 30000)
+let cleanupIntervalId: number | null = null
+
+const startCleanupInterval = () => {
+  if (cleanupIntervalId != null) return
+  if (typeof window === 'undefined') return
+  cleanupIntervalId = window.setInterval(cleanExpiredReservations, 30000)
+}
 
 // Función para refrescar datos desde la API
 const refreshTakenNumbers = async () => {
@@ -98,6 +89,9 @@ export function useNumbersAvailability() {
     // Cargar números tomados desde la API
     loadTakenNumbersFromAPI()
   }
+
+  // Mantener el estado limpio sin provocar loops reactivos.
+  startCleanupInterval()
 
   // Computed para números disponibles (no tomados ni reservados)
   const availableNumbers = computed(() => {
@@ -114,8 +108,9 @@ export function useNumbersAvailability() {
 
   // Computed para obtener números reservados activos
   const activeReservations = computed(() => {
-    cleanExpiredReservations()
-    return reservedNumbers.value
+    // IMPORTANTE: computed debe ser puro (sin mutar estado reactivo).
+    const now = Date.now()
+    return reservedNumbers.value.filter((r) => r.expiresAt > now)
   })
 
   // Función para reservar números temporalmente (usando verificación síncrona)

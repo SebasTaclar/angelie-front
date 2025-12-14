@@ -11,14 +11,17 @@
       <div class="content-grid">
         <!-- Mapa + Dirección -->
         <div class="left-column">
-          <div class="map-wrapper">
+          <div ref="mapHostEl" class="map-wrapper">
             <iframe
+              v-if="shouldLoadMap"
+              title="Mapa: Joyería Angelie"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3976.9729106924015!2d-74.07661092622172!3d4.598875342534367!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e3f9957a2e86765%3A0x92bd4b62b7506c09!2sJOYERIA%20ANGELIE!5e0!3m2!1ses!2sus!4v1765479420647!5m2!1ses!2sus"
               allowfullscreen
               loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"
               class="map-iframe"
             ></iframe>
+            <div v-else class="map-placeholder" aria-hidden="true"></div>
           </div>
 
           <div class="info-item">
@@ -83,6 +86,44 @@
 <script setup lang="ts">
 defineOptions({
   name: 'ContactSection'
+})
+
+import { onMounted, onBeforeUnmount, ref } from 'vue'
+
+const mapHostEl = ref<HTMLElement | null>(null)
+const shouldLoadMap = ref(false)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  if (typeof window === 'undefined') return
+  if (shouldLoadMap.value) return
+
+  const load = () => {
+    shouldLoadMap.value = true
+    observer?.disconnect()
+    observer = null
+  }
+
+  if ('IntersectionObserver' in window && mapHostEl.value) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          load()
+        }
+      },
+      { root: null, rootMargin: '200px', threshold: 0.01 },
+    )
+    observer.observe(mapHostEl.value)
+    return
+  }
+
+  // Fallback: cargar pronto si no hay soporte de IO.
+  window.setTimeout(load, 0)
+})
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  observer = null
 })
 </script>
 
@@ -153,6 +194,12 @@ defineOptions({
   height: 240px;
   border: none;
   display: block;
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 240px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* === INFORMACIÓN === */
