@@ -640,7 +640,9 @@ const categorySections = computed(() => {
   return sections
 })
 
-const carouselRefs = ref<Record<string, HTMLElement | null>>({})
+// Importante: esto NO debe ser reactivo. Si lo hacemos reactivo y lo mutamos desde un :ref,
+// Vue puede entrar en un loop de renders (Maximum recursive updates).
+const carouselRefs = new Map<string, HTMLElement | null>()
 
 function setCarouselRef(slug: string, el: unknown) {
   // Vue puede pasar un Element, un ComponentPublicInstance (con $el), o null
@@ -655,11 +657,11 @@ function setCarouselRef(slug: string, el: unknown) {
         ? el.$el
         : null
 
-  carouselRefs.value = { ...carouselRefs.value, [slug]: node }
+  carouselRefs.set(slug, node)
 }
 
 function scrollCategory(slug: string, direction: -1 | 1) {
-  const el = carouselRefs.value[slug]
+  const el = carouselRefs.get(slug)
   if (!el) return
   const amount = Math.max(320, Math.floor(el.clientWidth * 0.92))
   el.scrollBy({ left: amount * direction, behavior: 'smooth' })

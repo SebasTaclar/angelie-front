@@ -45,11 +45,13 @@ export class ApiClient {
 
     // Obtener token del localStorage si existe
     const token = localStorage.getItem('authToken')
-    console.log(
-      '🔑 [apiClient] Token presente:',
-      token ? '✅ Sí' : '❌ No',
-      token ? `(${token.substring(0, 20)}...)` : '',
-    )
+    if (import.meta.env.DEV) {
+      console.log(
+        '🔑 [apiClient] Token presente:',
+        token ? '✅ Sí' : '❌ No',
+        token ? `(${token.substring(0, 20)}...)` : '',
+      )
+    }
 
     // Preparar headers
     let headers = { ...this.defaultHeaders }
