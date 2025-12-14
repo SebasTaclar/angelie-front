@@ -5,15 +5,15 @@
       <div class="checkout-header">
         <button class="back-button" @click="goBack">
           <span class="icon">←</span>
-          Volver a la tienda
+          {{ t('checkout.back') }}
         </button>
-        <h1 class="checkout-title">Finalizar Pedido</h1>
+        <h1 class="checkout-title">{{ t('checkout.title') }}</h1>
       </div>
 
       <div class="checkout-content">
         <!-- Resumen del pedido (lado izquierdo) -->
         <div class="order-summary">
-          <h2>Resumen del pedido</h2>
+          <h2>{{ t('checkout.summaryTitle') }}</h2>
 
           <div class="cart-items">
             <div
@@ -35,22 +35,22 @@
             </div>
 
             <div v-if="cartItems.length === 0" class="empty-cart">
-              <p>No hay productos en el carrito</p>
-              <button @click="goBack" class="btn-primary">Ir a la tienda</button>
+              <p>{{ t('checkout.emptyCart') }}</p>
+              <button @click="goBack" class="btn-primary">{{ t('checkout.goStore') }}</button>
             </div>
           </div>
 
           <div v-if="cartItems.length > 0" class="order-total">
             <div class="total-row">
-              <span>Subtotal:</span>
+              <span>{{ t('checkout.subtotal') }}:</span>
               <span>${{ totalPrice.toLocaleString() }}</span>
             </div>
             <div class="total-row">
-              <span>Envío:</span>
-              <span>{{ deliveryMethod === 'delivery' ? '$15,000' : 'Gratis' }}</span>
+              <span>{{ t('checkout.shipping') }}:</span>
+              <span>{{ deliveryMethod === 'delivery' ? t('checkout.shippingDeliveryValue') : t('checkout.shippingPickupValue') }}</span>
             </div>
             <div class="total-row total-final">
-              <span>Total:</span>
+              <span>{{ t('checkout.total') }}:</span>
               <span>${{ finalTotal.toLocaleString() }}</span>
             </div>
           </div>
@@ -58,7 +58,7 @@
           <!-- Botón seguir comprando -->
           <div v-if="cartItems.length > 0" class="continue-shopping">
             <button @click="goToHome" class="btn-continue">
-              ← Seguir comprando
+              ← {{ t('checkout.continueShopping') }}
             </button>
           </div>
         </div>
@@ -67,14 +67,14 @@
         <div class="checkout-form">
           <!-- Sección de contacto -->
           <div class="form-section">
-            <h2>Contacto</h2>
+            <h2>{{ t('checkout.contactTitle') }}</h2>
             <div class="form-group">
-              <label for="name">Nombre completo *</label>
+              <label for="name">{{ t('checkout.fullName') }} <span class="required">*</span></label>
               <input
                 id="name"
                 v-model="formData.name"
                 type="text"
-                placeholder="Escribe Tu Nombre"
+                :placeholder="t('checkout.fullNamePlaceholder')"
                 :class="{ 'error': errors.name }"
                 @input="clearError('name')"
               >
@@ -82,12 +82,12 @@
             </div>
 
             <div class="form-group">
-              <label for="email">Correo electrónico *</label>
+              <label for="email">{{ t('checkout.email') }} <span class="required">*</span></label>
               <input
                 id="email"
                 v-model="formData.email"
                 type="email"
-                placeholder="ejemplo@correo.com"
+                :placeholder="t('checkout.emailPlaceholder')"
                 :class="{ 'error': errors.email }"
                 @input="clearError('email')"
               >
@@ -96,12 +96,12 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="identificationNumber">Número de cédula *</label>
+                <label for="identificationNumber">{{ t('checkout.idNumber') }} <span class="required">*</span></label>
                 <input
                   id="identificationNumber"
                   v-model="formData.identificationNumber"
                   type="text"
-                  placeholder="Ejm: 1234567890"
+                  :placeholder="t('checkout.idNumberPlaceholder')"
                   :class="{ 'error': errors.identificationNumber }"
                   @input="clearError('identificationNumber')"
                 >
@@ -109,12 +109,12 @@
               </div>
 
               <div class="form-group">
-                <label for="contactNumber">Teléfono *</label>
+                <label for="contactNumber">{{ t('checkout.phone') }} <span class="required">*</span></label>
                 <input
                   id="contactNumber"
                   v-model="formData.contactNumber"
                   type="tel"
-                  placeholder="Ejm: 300 XXX XXXX"
+                  :placeholder="t('checkout.phonePlaceholder')"
                   :class="{ 'error': errors.contactNumber }"
                   @input="clearError('contactNumber')"
                 >
@@ -124,8 +124,9 @@
 
             <div class="instagram-link-container">
               <p class="instagram-text">
-                <a href="https://www.instagram.com/appsstorepro" target="_blank" class="instagram-link" rel="noopener noreferrer">
-                  📱 Síguenos en nuestro Instagram para estar atentos de más novedades
+                <a :href="instagramUrl" target="_blank" class="instagram-link" rel="noopener noreferrer">
+                  <span class="ig-dot" aria-hidden="true"></span>
+                  {{ t('social.instagramFollow') }}
                 </a>
               </p>
             </div>
@@ -137,9 +138,9 @@
                   type="checkbox"
                 >
                 <span>
-                  He leído y acepto los
+                  {{ t('checkout.termsAcceptPrefix') }}
                   <router-link to="/terms-and-conditions" class="privacy-link" target="_blank">
-                    términos y condiciones
+                    {{ t('checkout.termsAcceptLink') }}
                   </router-link>
                   <span class="required">*</span>
                 </span>
@@ -150,7 +151,7 @@
 
           <!-- Sección de entrega -->
           <div class="form-section">
-            <h2>Entrega</h2>
+            <h2>{{ t('checkout.deliveryTitle') }}</h2>
 
             <div class="delivery-options">
               <label class="delivery-option" :class="{ 'selected': deliveryMethod === 'delivery' }">
@@ -163,9 +164,9 @@
                 <div class="option-content">
                   <div class="option-header">
                     <span class="option-icon">🚚</span>
-                    <span class="option-title">Envío a domicilio</span>
+                    <span class="option-title">{{ t('checkout.deliveryHome') }}</span>
                   </div>
-                  <span class="option-price">$15,000</span>
+                  <span class="option-price">{{ t('checkout.shippingDeliveryValue') }}</span>
                 </div>
               </label>
 
@@ -179,9 +180,9 @@
                 <div class="option-content">
                   <div class="option-header">
                     <span class="option-icon">🏪</span>
-                    <span class="option-title">Recoger en tienda</span>
+                    <span class="option-title">{{ t('checkout.deliveryPickup') }}</span>
                   </div>
-                  <span class="option-price">Gratis</span>
+                  <span class="option-price">{{ t('checkout.shippingPickupValue') }}</span>
                 </div>
               </label>
             </div>
@@ -190,12 +191,12 @@
             <transition name="fade">
               <div v-if="deliveryMethod === 'delivery'" class="address-section">
                 <div class="form-group">
-                  <label for="address">Dirección *</label>
+                  <label for="address">{{ t('checkout.address') }} <span class="required">*</span></label>
                   <input
                     id="address"
                     v-model="formData.address"
                     type="text"
-                    placeholder="Ejm: Calle 123 # XX-XX"
+                    :placeholder="t('checkout.addressPlaceholder')"
                     :class="{ 'error': errors.address }"
                     @input="clearError('address')"
                   >
@@ -204,12 +205,12 @@
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label for="city">Ciudad *</label>
+                    <label for="city">{{ t('checkout.city') }} <span class="required">*</span></label>
                     <input
                       id="city"
                       v-model="formData.city"
                       type="text"
-                      placeholder="Escribe la ciudad de Destino"
+                      :placeholder="t('checkout.cityPlaceholder')"
                       :class="{ 'error': errors.city }"
                       @input="clearError('city')"
                     >
@@ -217,12 +218,12 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="phone">Teléfono *</label>
+                    <label for="phone">{{ t('checkout.deliveryPhone') }} <span class="required">*</span></label>
                     <input
                       id="phone"
                       v-model="formData.phone"
                       type="tel"
-                      placeholder="Ejm: 300 XXX XXXX"
+                      :placeholder="t('checkout.phonePlaceholder')"
                       :class="{ 'error': errors.phone }"
                       @input="clearError('phone')"
                     >
@@ -236,13 +237,14 @@
             <transition name="fade">
               <div v-if="deliveryMethod === 'pickup'" class="pickup-info">
                 <div class="info-card">
-                  <h3>📍 Nuestra Ubicación</h3>
-                  <p class="location-name"><strong>Centro comercial Unilago, Bogotá - Loc. 1-124</strong></p>
-                  <p class="location-address">Cra. 15 # 78 - 33, Bogotá D.C.</p>
+                  <h3>📍 {{ t('checkout.pickupLocationTitle') }}</h3>
+                  <p class="location-name"><strong>{{ t('store.pickup.title') }}</strong></p>
+                  <p class="location-address">{{ t('store.pickup.addressLine') }}</p>
 
-                  <h4>⏰ Horarios de Atención</h4>
-                  <p>Lunes - Sábado: 9:30 AM - 7:00 PM</p>
-                  <p>Domingos: Cada 15 Días</p>
+                  <h4>⏰ {{ t('store.pickup.hoursTitle') }}</h4>
+                  <p>{{ t('store.pickup.hours.weekday') }}</p>
+                  <p>{{ t('store.pickup.hours.saturday') }}</p>
+                  <p>{{ t('store.pickup.hours.sunday') }}</p>
                 </div>
               </div>
             </transition>
@@ -260,8 +262,8 @@
             :disabled="isProcessing"
             @click="confirmOrder"
           >
-            <span v-if="!isProcessing">Confirmar pedido - ${{ finalTotal.toLocaleString() }}</span>
-            <span v-else>Procesando...</span>
+            <span v-if="!isProcessing">{{ t('checkout.confirm') }} - ${{ finalTotal.toLocaleString() }}</span>
+            <span v-else>{{ t('checkout.processing') }}</span>
           </button>
         </div>
       </div>
@@ -270,11 +272,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '@/composables/useCart'
 import { paymentService } from '@/services/api/paymentService'
 import type { CreateProductPaymentRequest } from '@/services/api/paymentService'
+import { useI18n } from 'vue-i18n'
+import { SOCIALS } from '@/config/brand'
 
 defineOptions({
   name: 'CheckoutView'
@@ -282,6 +286,9 @@ defineOptions({
 
 const router = useRouter()
 const { cartItems, totalPrice, clearCart } = useCart()
+const { t } = useI18n()
+
+const instagramUrl = SOCIALS.instagramUrl
 
 // Estado del formulario
 const formData = ref({
@@ -298,6 +305,22 @@ const formData = ref({
 const deliveryMethod = ref<'delivery' | 'pickup'>('delivery')
 const isProcessing = ref(false)
 const errors = ref<Record<string, string>>({})
+
+watch(
+  deliveryMethod,
+  (value) => {
+    if (value === 'pickup') {
+      // Estos campos no aplican para pickup
+      formData.value.address = ''
+      formData.value.city = ''
+      formData.value.phone = ''
+      delete errors.value.address
+      delete errors.value.city
+      delete errors.value.phone
+    }
+  },
+  { immediate: true }
+)
 
 // Función para verificar si el usuario ya aceptó los términos
 const checkTermsAcceptance = () => {
@@ -340,37 +363,37 @@ const validateForm = (): boolean => {
   errors.value = {}
 
   if (!formData.value.name.trim()) {
-    errors.value.name = 'El nombre es requerido'
+    errors.value.name = t('checkout.errors.nameRequired')
   }
 
   if (!formData.value.email.trim()) {
-    errors.value.email = 'El correo electrónico es requerido'
+    errors.value.email = t('checkout.errors.emailRequired')
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email)) {
-    errors.value.email = 'Correo electrónico inválido'
+    errors.value.email = t('checkout.errors.emailInvalid')
   }
 
   if (!formData.value.identificationNumber.trim()) {
-    errors.value.identificationNumber = 'El número de cédula es requerido'
+    errors.value.identificationNumber = t('checkout.errors.idRequired')
   }
 
   if (!formData.value.contactNumber.trim()) {
-    errors.value.contactNumber = 'El teléfono es requerido'
+    errors.value.contactNumber = t('checkout.errors.phoneRequired')
   }
 
   if (deliveryMethod.value === 'delivery') {
     if (!formData.value.address.trim()) {
-      errors.value.address = 'La dirección es requerida'
+      errors.value.address = t('checkout.errors.addressRequired')
     }
     if (!formData.value.city.trim()) {
-      errors.value.city = 'La ciudad es requerida'
+      errors.value.city = t('checkout.errors.cityRequired')
     }
     if (!formData.value.phone.trim()) {
-      errors.value.phone = 'El teléfono de entrega es requerido'
+      errors.value.phone = t('checkout.errors.deliveryPhoneRequired')
     }
   }
 
   if (!formData.value.acceptTerms) {
-    errors.value.acceptTerms = 'Debes aceptar los términos y condiciones'
+    errors.value.acceptTerms = t('checkout.errors.termsRequired')
   }
 
   return Object.keys(errors.value).length === 0
@@ -534,9 +557,11 @@ const goToHome = () => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
+
 .checkout-page {
   min-height: 100vh;
-  background: #0a0a0a;
+  background: linear-gradient(180deg, #071e25 0%, #081f2a 60%, #061318 100%);
   padding: 5rem 1rem;
 }
 
@@ -550,8 +575,8 @@ const goToHome = () => {
 }
 
 .back-button {
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(201, 168, 89, 0.18);
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
@@ -561,19 +586,21 @@ const goToHome = () => {
   gap: 0.5rem;
   margin-bottom: 1rem;
   transition: all 0.3s ease;
-  color: #f5f5f7;
+  color: rgba(246, 245, 241, 0.9);
 }
 
 .back-button:hover {
-  background: #222;
+  background: rgba(201, 168, 89, 0.08);
   transform: translateX(-4px);
-  border-color: #444;
+  border-color: rgba(201, 168, 89, 0.35);
 }
 
 .checkout-title {
   font-size: 2rem;
-  color: #ffffff;
+  color: rgba(246, 245, 241, 0.95);
   margin: 0;
+  font-family: 'Playfair Display', 'Georgia', 'Garamond', serif;
+  letter-spacing: 0.5px;
 }
 
 .checkout-content {
@@ -584,20 +611,22 @@ const goToHome = () => {
 
 /* Resumen del pedido */
 .order-summary {
-  background: #1a1a1a;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.035) 100%);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
   height: fit-content;
   position: sticky;
   top: 2rem;
-  border: 1px solid #2a2a2a;
+  border: 1px solid rgba(201, 168, 89, 0.16);
 }
 
 .order-summary h2 {
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
-  color: #ffffff;
+  color: rgba(246, 245, 241, 0.95);
+  font-family: 'Playfair Display', 'Georgia', 'Garamond', serif;
+  letter-spacing: 0.4px;
 }
 
 .cart-items {
@@ -610,7 +639,7 @@ const goToHome = () => {
   display: flex;
   gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid rgba(201, 168, 89, 0.12);
 }
 
 .cart-item:last-child {
@@ -627,18 +656,18 @@ const goToHome = () => {
 .item-details h3 {
   font-size: 1rem;
   margin: 0 0 0.5rem 0;
-  color: #f5f5f7;
+  color: rgba(246, 245, 241, 0.92);
 }
 
 .item-quantity {
   font-size: 0.875rem;
-  color: #a1a1a6;
+  color: rgba(246, 245, 241, 0.68);
   margin: 0.25rem 0;
 }
 
 .item-color {
   font-size: 0.875rem;
-  color: #0a84ff;
+  color: rgb(201, 168, 89);
   margin: 0.25rem 0;
   font-weight: 500;
 }
@@ -646,18 +675,18 @@ const goToHome = () => {
 .item-price {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #10b981;
+  color: rgb(201, 168, 89);
   margin: 0;
 }
 
 .empty-cart {
   text-align: center;
   padding: 3rem 1rem;
-  color: #6e6e73;
+  color: rgba(246, 245, 241, 0.7);
 }
 
 .order-total {
-  border-top: 2px solid #2a2a2a;
+  border-top: 1px solid rgba(201, 168, 89, 0.18);
   padding-top: 1rem;
 }
 
@@ -666,16 +695,16 @@ const goToHome = () => {
   justify-content: space-between;
   padding: 0.75rem 0;
   font-size: 1rem;
-  color: #a1a1a6;
+  color: rgba(246, 245, 241, 0.7);
 }
 
 .total-final {
-  border-top: 2px solid #2a2a2a;
+  border-top: 1px solid rgba(201, 168, 89, 0.18);
   margin-top: 0.5rem;
   padding-top: 1rem;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #ffffff;
+  color: rgba(246, 245, 241, 0.95);
 }
 
 .continue-shopping {
@@ -685,8 +714,8 @@ const goToHome = () => {
 
 .btn-continue {
   background: transparent;
-  color: #0a84ff;
-  border: 2px solid #0a84ff;
+  color: rgb(201, 168, 89);
+  border: 2px solid rgba(201, 168, 89, 0.6);
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-size: 1rem;
@@ -697,19 +726,19 @@ const goToHome = () => {
 }
 
 .btn-continue:hover {
-  background: #0a84ff;
-  color: white;
+  background: rgba(201, 168, 89, 0.14);
+  color: rgba(246, 245, 241, 0.95);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+  box-shadow: 0 8px 18px rgba(201, 168, 89, 0.12);
 }
 
 /* Formulario */
 .checkout-form {
-  background: #1a1a1a;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.035) 100%);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  border: 1px solid #2a2a2a;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(201, 168, 89, 0.16);
 }
 
 .form-section {
@@ -719,7 +748,9 @@ const goToHome = () => {
 .form-section h2 {
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
-  color: #ffffff;
+  color: rgba(246, 245, 241, 0.95);
+  font-family: 'Playfair Display', 'Georgia', 'Garamond', serif;
+  letter-spacing: 0.4px;
 }
 
 .form-group {
@@ -730,7 +761,7 @@ const goToHome = () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #f5f5f7;
+  color: rgba(246, 245, 241, 0.88);
 }
 
 .form-group input[type="text"],
@@ -738,26 +769,26 @@ const goToHome = () => {
 .form-group input[type="tel"] {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 1px solid #333;
+  border: 1px solid rgba(201, 168, 89, 0.22);
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: #0a0a0a;
-  color: #f5f5f7;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(246, 245, 241, 0.92);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: rgba(201, 168, 89, 0.75);
+  box-shadow: 0 0 0 3px rgba(201, 168, 89, 0.14);
 }
 
 .form-group input.error {
-  border-color: #ef4444;
+  border-color: rgba(255, 140, 140, 0.95);
 }
 
 .error-message {
-  color: #ef4444;
+  color: rgba(255, 140, 140, 0.95);
   font-size: 0.875rem;
   margin-top: 0.25rem;
   display: block;
@@ -775,7 +806,7 @@ const goToHome = () => {
   gap: 0.5rem;
   cursor: pointer;
   font-weight: normal;
-  color: #f5f5f7;
+  color: rgba(246, 245, 241, 0.88);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -785,11 +816,12 @@ const goToHome = () => {
 }
 
 .instagram-link-container {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, rgba(201, 168, 89, 0.16) 0%, rgba(201, 168, 89, 0.06) 100%);
   padding: 1rem;
   border-radius: 12px;
   margin-bottom: 1rem;
   text-align: center;
+  border: 1px solid rgba(201, 168, 89, 0.22);
 }
 
 .instagram-text {
@@ -797,7 +829,7 @@ const goToHome = () => {
 }
 
 .instagram-link {
-  color: white;
+  color: rgba(246, 245, 241, 0.92);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
@@ -807,6 +839,15 @@ const goToHome = () => {
   transition: all 0.3s ease;
 }
 
+.ig-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgb(201, 168, 89);
+  box-shadow: 0 0 0 4px rgba(201, 168, 89, 0.15);
+  flex-shrink: 0;
+}
+
 .instagram-link:hover {
   transform: scale(1.05);
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -814,22 +855,22 @@ const goToHome = () => {
 
 .privacy-text {
   font-size: 0.875rem;
-  color: #a1a1a6;
+  color: rgba(246, 245, 241, 0.84);
   margin-top: 1rem;
 }
 
 .privacy-link {
-  color: #10b981;
+  color: rgb(201, 168, 89);
   text-decoration: underline;
   font-weight: 600;
 }
 
 .privacy-link:hover {
-  color: #059669;
+  color: rgba(201, 168, 89, 0.9);
 }
 
 .required {
-  color: #ef4444;
+  color: rgba(201, 168, 89, 0.95);
   margin-left: 0.25rem;
 }
 
@@ -842,24 +883,24 @@ const goToHome = () => {
 }
 
 .delivery-option {
-  border: 2px solid #333;
+  border: 2px solid rgba(201, 168, 89, 0.22);
   border-radius: 12px;
   padding: 1.25rem;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  background: #0a0a0a;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .delivery-option:hover {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(201, 168, 89, 0.55);
+  background: rgba(201, 168, 89, 0.08);
 }
 
 .delivery-option.selected {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: rgba(201, 168, 89, 0.7);
+  background: rgba(201, 168, 89, 0.1);
+  box-shadow: 0 0 0 3px rgba(201, 168, 89, 0.14);
 }
 
 .delivery-option input[type="radio"] {
@@ -886,13 +927,13 @@ const goToHome = () => {
 .option-title {
   font-size: 1.125rem;
   font-weight: 500;
-  color: #f5f5f7;
+  color: rgba(246, 245, 241, 0.92);
 }
 
 .option-price {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #10b981;
+  color: rgb(201, 168, 89);
 }
 
 /* Información de pickup */
@@ -901,8 +942,8 @@ const goToHome = () => {
 }
 
 .info-card {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid #10b981;
+  background: rgba(201, 168, 89, 0.08);
+  border: 1px solid rgba(201, 168, 89, 0.3);
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -922,17 +963,17 @@ const goToHome = () => {
 
 .info-card p {
   margin: 0.5rem 0;
-  color: #a1a1a6;
+  color: rgba(246, 245, 241, 0.84);
   line-height: 1.6;
 }
 
 .location-name {
-  color: #10b981 !important;
+  color: rgb(201, 168, 89) !important;
   font-size: 1rem;
 }
 
 .location-address {
-  color: #a1a1a6 !important;
+  color: rgba(246, 245, 241, 0.84) !important;
   font-size: 0.95rem;
   margin-bottom: 1rem !important;
 }
@@ -940,11 +981,11 @@ const goToHome = () => {
 /* Alerta de error */
 .error-alert {
   background: rgba(239, 68, 68, 0.1);
-  border: 1px solid #ef4444;
+  border: 1px solid rgba(255, 140, 140, 0.55);
   border-radius: 12px;
   padding: 1rem;
   margin-top: 1.5rem;
-  color: #ef4444;
+  color: rgba(255, 140, 140, 0.95);
   font-weight: 500;
   text-align: center;
 }
@@ -953,8 +994,8 @@ const goToHome = () => {
 .btn-confirm {
   width: 100%;
   padding: 1.25rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background: linear-gradient(135deg, rgb(201, 168, 89) 0%, rgb(180, 145, 65) 100%);
+  color: #061318;
   border: none;
   border-radius: 12px;
   font-size: 1.125rem;
@@ -966,7 +1007,7 @@ const goToHome = () => {
 
 .btn-confirm:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 12px 26px rgba(201, 168, 89, 0.2);
 }
 
 .btn-confirm:disabled {
@@ -976,8 +1017,8 @@ const goToHome = () => {
 
 .btn-primary {
   padding: 0.875rem 2rem;
-  background: #10b981;
-  color: white;
+  background: rgb(201, 168, 89);
+  color: #061318;
   border: none;
   border-radius: 8px;
   font-size: 1rem;

@@ -33,16 +33,17 @@
       <main class="content">
         <header class="category-hero">
           <div class="category-hero-text">
-            <h1 class="category-title">Ofertas Especiales</h1>
-            <p class="category-description">Descubre nuestras mejores ofertas en joyería fina. Productos exclusivos con descuentos por tiempo limitado.</p>
+            <h1 class="category-title">{{ pageTitle }}</h1>
+            <p v-if="pageDescription" class="category-description">{{ pageDescription }}</p>
           </div>
 
           <div class="category-hero-image">
             <img
-              src="https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=900&h=600&fit=crop&q=80"
-              alt="Ofertas Especiales"
+              :src="categoryImageSrc"
+              :alt="pageTitle"
               loading="lazy"
               decoding="async"
+              @error="onCategoryImageError"
             />
           </div>
         </header>
@@ -69,43 +70,41 @@
         </div>
 
         <div class="meta">
-          <span v-if="isLoadingProducts" class="meta-text">Cargando productos...</span>
-          <span v-else class="meta-text">Mostrando {{ filteredOfferProducts.length }} productos</span>
+          <span v-if="loading" class="meta-text">Cargando productos...</span>
+          <span v-else class="meta-text">Mostrando {{ filteredProducts.length }} productos</span>
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
 
-        <div v-else-if="!isLoadingProducts && filteredOfferProducts.length > 0" class="grid">
+        <div v-else class="grid">
           <article
-            v-for="product in filteredOfferProducts"
-            :key="product.id"
+            v-for="p in filteredProducts"
+            :key="p.id"
             class="card"
             role="button"
             tabindex="0"
-            @click="openQuickView(product)"
-            @keydown.enter.prevent="openQuickView(product)"
-            @keydown.space.prevent="openQuickView(product)"
+            @click="openQuickView(p)"
+            @keydown.enter.prevent="openQuickView(p)"
+            @keydown.space.prevent="openQuickView(p)"
           >
             <div class="image-wrap">
-              <img :src="product.images[0]" :alt="product.name" loading="lazy" decoding="async" />
+              <img :src="p.images[0]" :alt="p.name" loading="lazy" decoding="async" />
             </div>
 
             <div class="card-body">
-              <div class="category-label">
-                {{ isGlobalSearch ? (hasRealDiscount(product) ? 'OFERTA' : categoryNameById(product.category)) : 'OFERTA' }}
-              </div>
-              <h3 class="name">{{ product.name }}</h3>
-              <div class="price">${{ product.price.toLocaleString() }}</div>
-              <div v-if="hasRealDiscount(product)" class="original-price">${{ product.originalPrice!.toLocaleString() }}</div>
+              <div class="category-label">{{ categoryName(p.category) }}</div>
+              <h3 class="name">{{ p.name }}</h3>
+              <div class="price">${{ p.price.toLocaleString() }}</div>
 
-              <button class="add" type="button" @click.stop="addProductToCart(product)">
+              <button class="add" type="button" @click.stop="addProductToCart(p)">
                 <span class="cart">🛒</span>
                 Agregar
               </button>
             </div>
           </article>
         </div>
-        <div v-else-if="!isLoadingProducts && filteredOfferProducts.length === 0" class="empty">
+
+        <div v-if="!loading && !error && filteredProducts.length === 0" class="empty">
           <p>No hay productos para mostrar.</p>
         </div>
       </main>
@@ -114,47 +113,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProducts } from '@/composables/useProducts'
-import { useCategories } from '@/composables/useCategories'
 import { useCart } from '@/composables/useCart'
 import { useProductQuickView } from '@/composables/useProductQuickView'
 import type { Product } from '@/types/ProductType'
 
-import { useHead } from '@vueuse/head'
-
-useHead({
-  title: 'Ofertas | Joyería Angelie',
-  meta: [
-    {
-      name: 'description',
-      content: 'Descubre nuestras ofertas y productos con descuento en Joyería Angelie. Aprovecha precios especiales por tiempo limitado.'
-    },
-    { property: 'og:title', content: 'Ofertas | Joyería Angelie' },
-    { property: 'og:description', content: 'Productos con descuento en Joyería Angelie. Aprovecha precios especiales por tiempo limitado.' },
-    { property: 'og:image', content: '/images/logo.jpeg' },
-    { property: 'og:url', content: 'https://www.joyeriaangelie.com/ofertas' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:image', content: '/images/logo.jpeg' }
-  ]
-})
-
-const { regularProducts, loadProducts, showcaseProducts, loadShowcaseProducts } = useProducts()
-const { categories, loadCategories } = useCategories()
-const { addToCart } = useCart()
-const quickView = useProductQuickView()
-
-function openQuickView(product: Product) {
-  quickView.open(product)
-}
-
-const isLoadingProducts = ref(true)
-const error = ref<string | null>(null)
+const props = defineProps<{ slug: string; title?: string }>()
 
 const route = useRoute()
 
-// Filtros y búsqueda
+const { availableProducts, categories, loadProducts, loadCategories } = useProducts()
+const { addToCart } = useCart()
+const quickView = useProductQuickView()
+
+const loading = ref(false)
+const error = ref<string | null>(null)
+
 const searchTerm = ref('')
 const sortBy = ref<'featured' | 'price-asc' | 'price-desc'>('featured')
 const selectedPriceRange = ref<'all' | 'lt100' | '100-300' | '300-500' | 'gt500'>('all')
@@ -167,40 +143,88 @@ watch(
   { immediate: true }
 )
 
-const isGlobalSearch = computed(() => route.query.scope === 'all' && searchTerm.value.trim().length > 0)
+const categoryImageIndex = ref(0)
 
-const allProducts = computed(() => {
-  const list = [...regularProducts.value, ...showcaseProducts.value]
-  const seen = new Set<string>()
-  return list.filter(p => {
-    if (seen.has(p.id)) return false
-    seen.add(p.id)
-    return true
-  }) as Product[]
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
+const currentCategoryId = computed(() => {
+  const slug = props.slug
+  const direct = categories.value.find(c => slugify(c.name) === slug)
+  if (direct) return direct.id
+
+  const relaxed = categories.value.find(c => {
+    const s = slugify(c.name)
+    return s.includes(slug) || slug.includes(s)
+  })
+
+  return relaxed?.id
 })
 
-// Productos en oferta: solo los que tienen descuento real (originalPrice > price)
-const offerProducts = computed(() => {
-  if (allProducts.value.length === 0) return []
-  return allProducts.value.filter((p: Product) =>
-    p.images &&
-    p.images.length > 0 &&
-    p.status &&
-    typeof p.originalPrice === 'number' &&
-    p.originalPrice > 0 &&
-    p.price > 0 &&
-    p.originalPrice > p.price
-  )
+const currentCategory = computed(() => {
+  const id = currentCategoryId.value
+  if (id) {
+    const byId = categories.value.find(c => c.id === id)
+    if (byId) return byId
+  }
+  return categories.value.find(c => slugify(c.name) === props.slug)
 })
 
-const productsForPage = computed(() => (isGlobalSearch.value ? allProducts.value : offerProducts.value))
+const pageTitle = computed(() => props.title || currentCategory.value?.name || props.slug)
+const pageDescription = computed(() => currentCategory.value?.description || '')
 
-// Productos filtrados por búsqueda, precio y ordenamiento
-const filteredOfferProducts = computed(() => {
+const categoryImageCandidates = computed(() => {
+  const base = `/images/${props.slug}`
+  return [
+    `${base}.jpg`,
+    `${base}.jpeg`,
+    `${base}.png`,
+    `${base}.webp`,
+    'https://placehold.co/900x600?text=CATEGOR%C3%8DA'
+  ]
+})
+
+const categoryImageSrc = computed(() => {
+  return categoryImageCandidates.value[Math.min(categoryImageIndex.value, categoryImageCandidates.value.length - 1)]
+})
+
+function onCategoryImageError() {
+  const next = categoryImageIndex.value + 1
+  categoryImageIndex.value = Math.min(next, categoryImageCandidates.value.length - 1)
+}
+
+watch(
+  () => props.slug,
+  () => {
+    categoryImageIndex.value = 0
+    clearFilters()
+    error.value = null
+  }
+)
+
+function categoryName(categoryId: string): string {
+  return categories.value.find(c => c.id === categoryId)?.name?.toUpperCase() || ''
+}
+
+const baseProductsForCategory = computed(() => {
+  const id = currentCategoryId.value
+  if (!id) return []
+  return availableProducts.value.filter(p => p.category === id)
+})
+
+const filteredProducts = computed(() => {
   const q = searchTerm.value.trim().toLowerCase()
-  let list = productsForPage.value
 
-  // Filtro de búsqueda
+  let list = baseProductsForCategory.value
+
   if (q) {
     list = list.filter(p => {
       const name = p.name.toLowerCase()
@@ -209,7 +233,7 @@ const filteredOfferProducts = computed(() => {
     })
   }
 
-  // Filtro de precio
+  // Filtro de precio (sin filtros de categoría/material)
   list = list.filter(p => {
     const price = p.price
     switch (selectedPriceRange.value) {
@@ -226,7 +250,6 @@ const filteredOfferProducts = computed(() => {
     }
   })
 
-  // Ordenamiento
   if (sortBy.value === 'price-asc') {
     return [...list].sort((a, b) => a.price - b.price)
   }
@@ -237,49 +260,42 @@ const filteredOfferProducts = computed(() => {
   return list
 })
 
-function categoryNameById(categoryId: string): string {
-  return categories.value.find(cat => cat.id === categoryId)?.name?.toUpperCase() || ''
-}
-
-function hasRealDiscount(p: Product): boolean {
-  return typeof p.originalPrice === 'number' && p.originalPrice > 0 && p.originalPrice > p.price
-}
-
-function clearFilters() {
-  searchTerm.value = ''
-  selectedPriceRange.value = 'all'
-  sortBy.value = 'featured'
-}
-
 function addProductToCart(p: Product) {
-  const categoryName = categories.value.find(cat => cat.id === p.category)?.name || 'Ofertas'
   addToCart({
     id: p.id,
     name: p.name,
     price: p.price,
     image: p.images?.[0] || '',
-    category: categoryName,
+    category: categoryName(p.category),
     description: p.description,
     inStock: p.status === 'available',
     originalPrice: p.originalPrice
   })
 }
 
+function openQuickView(p: Product) {
+  quickView.open(p)
+}
+
+function clearFilters() {
+  searchTerm.value = ''
+  sortBy.value = 'featured'
+  selectedPriceRange.value = 'all'
+}
+
 onMounted(async () => {
+  loading.value = true
+  error.value = null
+
   try {
-    isLoadingProducts.value = true
-    error.value = null
     if (categories.value.length === 0) {
       await loadCategories()
     }
-    await Promise.all([
-      loadProducts(),
-      loadShowcaseProducts()
-    ])
+    await loadProducts()
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Error al cargar productos'
   } finally {
-    isLoadingProducts.value = false
+    loading.value = false
   }
 })
 </script>
@@ -554,13 +570,6 @@ onMounted(async () => {
   margin-top: 0.6rem;
   font-weight: 900;
   color: rgba(215, 172, 67, 0.95);
-}
-
-.original-price {
-  font-size: 0.85rem;
-  color: rgba(15, 23, 42, 0.5);
-  text-decoration: line-through;
-  margin-top: 0.35rem;
 }
 
 .add {

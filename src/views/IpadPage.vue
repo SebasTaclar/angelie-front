@@ -189,83 +189,7 @@
       </div>
     </section> -->
 
-    <!-- Botón del carrito flotante -->
-    <div v-if="totalItems > 0" class="floating-cart" @click="toggleCart">
-      <div class="cart-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="m5 7 1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/>
-          <path d="M22 7H2"/>
-          <path d="m9 3 2-2 2 2"/>
-        </svg>
-        <span class="cart-badge">{{ totalItems }}</span>
-      </div>
-      <div class="cart-tooltip">Ver carrito de compras</div>
-    </div>
-
-    <!-- Modal del carrito -->
-    <div v-if="isCartOpen" class="cart-overlay" @click="closeCart">
-      <div class="cart-modal" @click.stop>
-        <div class="cart-header">
-          <h3>Tu Carrito</h3>
-          <button @click="closeCart" class="close-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m18 6-12 12"/>
-              <path d="m6 6 12 12"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="cart-content">
-          <div v-if="cartItems.length === 0" class="empty-cart">
-            <p>Tu carrito está vacío</p>
-          </div>
-
-          <div v-else class="cart-items">
-            <div
-              v-for="item in cartItems"
-              :key="item.id"
-              class="cart-item"
-            >
-              <img :src="item.image" :alt="item.name" />
-              <div class="item-details">
-                <h4>{{ item.name }}</h4>
-                <span class="item-category">{{ item.category }}</span>
-                <span v-if="item.selectedColor" class="item-color">Color: {{ item.selectedColor }}</span>
-                <div class="item-price">${{ item.price.toLocaleString() }}</div>
-              </div>
-              <div class="item-controls">
-                <div class="quantity-controls">
-                  <button @click="updateQuantity(item.id, item.quantity - 1, item.selectedColor)" class="quantity-btn minus">-</button>
-                  <span>{{ item.quantity }}</span>
-                  <button @click="updateQuantity(item.id, item.quantity + 1, item.selectedColor)" class="quantity-btn plus">+</button>
-                </div>
-                <button @click="removeFromCart(item.id, item.selectedColor)" class="remove-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18"/>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="cartItems.length > 0" class="cart-footer">
-          <div class="cart-total-display">
-            <strong>Total: ${{ totalPrice.toLocaleString() }}</strong>
-          </div>
-          <div class="cart-actions">
-            <button @click="clearCart" class="btn-clear">
-              Limpiar carrito
-            </button>
-            <button @click="goToCheckout" class="btn-checkout">
-              Finalizar Pedido
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Carrito global renderizado en App.vue -->
 
     <!-- Modal del producto -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
@@ -360,7 +284,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useProducts } from '@/composables/useProducts'
 import { useCategories } from '@/composables/useCategories'
 import { useCart } from '@/composables/useCart'
@@ -386,23 +309,10 @@ useHead({
 })
 
 
-const router = useRouter()
 const { regularProducts, loadProducts, showcaseProducts, loadShowcaseProducts } = useProducts()
 const { categories, loadCategories } = useCategories()
 
-// Usar el composable del carrito
-const {
-  cartItems,
-  isCartOpen,
-  totalItems,
-  totalPrice,
-  addToCart,
-  removeFromCart,
-  updateQuantity,
-  clearCart,
-  toggleCart,
-  closeCart
-} = useCart()
+const { addToCart } = useCart()
 
 const isLoadingProducts = ref(true)
 
@@ -491,12 +401,6 @@ const closeModal = () => {
   showModal.value = false
   selectedProduct.value = null
   modalSelectedColor.value = ''
-}
-
-// Función para ir al checkout
-const goToCheckout = () => {
-  closeCart()
-  router.push('/checkout')
 }
 
 // Función para hacer scroll a la sección de productos

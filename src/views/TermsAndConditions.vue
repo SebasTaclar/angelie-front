@@ -1,454 +1,360 @@
 <template>
   <div class="terms-page">
-    <div class="terms-container">
-      <div class="terms-header">
+    <div class="terms-shell">
+      <header class="terms-header">
         <button class="back-button" @click="goBack">
-          <span class="icon">←</span>
-          Volver
+          <span class="icon" aria-hidden="true">←</span>
+          {{ t('terms.back') }}
         </button>
-        <h1>Términos y Condiciones</h1>
-        <p class="last-update">Última actualización: 12 de octubre de 2025</p>
-      </div>
 
-      <div class="terms-content">
-        <section class="terms-section">
-          <h2>1. Información General</h2>
-          <p>
-            Bienvenido a SOYDANI. Al acceder y realizar compras en nuestra plataforma, aceptas cumplir con estos términos y condiciones.
-            SOYDANI es una tienda en línea especializada en la venta de tecnología, decoración navideña y artículos del hogar.
+        <div class="header-text">
+          <h1 class="title">{{ t('terms.title') }}</h1>
+          <p class="last-update">
+            {{ t('terms.updated') }}: <span class="updated-date">{{ formattedLastUpdated }}</span>
           </p>
-        </section>
+        </div>
+      </header>
 
-        <section class="terms-section">
-          <h2>2. Productos y Servicios</h2>
-          <p>
-            Ofrecemos una variedad de productos en tres categorías principales:
-          </p>
-          <ul>
-            <li>Tecnología: Dispositivos electrónicos, accesorios, gadgets y equipos tecnológicos</li>
-            <li>Navidad: Decoración navideña, árboles, luces, adornos y artículos festivos</li>
-            <li>Hogar: Artículos para el hogar, decoración, organizadores y accesorios domésticos</li>
-            <li>Productos con múltiples opciones de colores y configuraciones</li>
-          </ul>
-          <p>
-            Nos reservamos el derecho de modificar, discontinuar o actualizar cualquier producto sin previo aviso.
-            Las imágenes y descripciones de los productos son representativas. Todos los productos cuentan con garantía según especificaciones del fabricante.
-          </p>
-        </section>
+      <main class="terms-content">
+        <section v-for="(section, idx) in sections" :key="idx" class="terms-section">
+          <h2 class="section-title">{{ section.title }}</h2>
 
-        <section class="terms-section">
-          <h2>3. Precios y Pagos</h2>
-          <p>
-            Todos los precios mostrados en la plataforma están expresados en pesos colombianos (COP) e incluyen IVA cuando aplique.
-            Los precios pueden cambiar sin previo aviso, pero los pedidos confirmados respetarán el precio vigente al momento de la compra.
+          <p v-for="(p, i) in section.paragraphs" :key="i" class="paragraph">
+            {{ p }}
           </p>
-          <p>
-            Aceptamos los siguientes métodos de pago:
-          </p>
-          <ul>
-            <li>Tarjetas de crédito y débito (Visa, Mastercard, American Express)</li>
-            <li>PSE (Pagos Seguros en Línea)</li>
-            <li>Transferencias bancarias</li>
+
+          <ul v-if="section.bullets && section.bullets.length" class="bullets">
+            <li v-for="(b, i) in section.bullets" :key="i">{{ b }}</li>
           </ul>
         </section>
 
-        <section class="terms-section">
-          <h2>4. Envíos y Entregas</h2>
-          <p>
-            <strong>Envío a domicilio:</strong> Realizamos envíos a nivel nacional. El costo de envío es de $15,000 COP para Bogotá
-            y área metropolitana. Para otras ciudades, el costo puede variar según la ubicación. El tiempo estimado de entrega es de
-            3 a 5 días hábiles en Bogotá y de 5 a 8 días hábiles en el resto del país.
-          </p>
-          <p>
-            <strong>Recogida en tienda:</strong> Puedes recoger tu pedido sin costo adicional en nuestra tienda física ubicada en
-            Centro comercial Unilago, Bogotá - Loc. 1-124, Cra. 15 # 78 - 33, Bogotá D.C. Recibirás una notificación cuando tu pedido esté listo para ser recogido. Horario de atención:
-            Lunes a Sábado de 9:30 AM a 7:00 PM. Domingos cerrado.
-          </p>
-          <p>
-            No nos hacemos responsables por retrasos en la entrega causados por la empresa de mensajería, condiciones climáticas,
-            eventos de fuerza mayor o información de contacto incorrecta proporcionada por el cliente.
-          </p>
+        <section class="contact-section">
+          <div class="contact-card">
+            <h2 class="section-title">{{ t('termsPage.contactTitle') }}</h2>
+            <p class="paragraph">{{ t('termsPage.contactSubtitle') }}</p>
+
+            <div class="contact-actions">
+              <a class="ig-link" :href="instagramUrl" target="_blank" rel="noopener noreferrer">
+                <span class="ig-dot" aria-hidden="true"></span>
+                {{ t('social.instagramLabel') }}: @{{ instagramHandle }}
+              </a>
+            </div>
+
+            <div class="pickup-card">
+              <h3 class="pickup-title">{{ t('termsPage.pickupTitle') }}</h3>
+              <p class="pickup-line location-name">{{ t('store.pickup.title') }}</p>
+              <p class="pickup-line">{{ t('store.pickup.addressLine') }}</p>
+              <h4 class="pickup-hours-title">{{ t('store.pickup.hoursTitle') }}</h4>
+              <p class="pickup-line">{{ t('store.pickup.hours.weekday') }}</p>
+              <p class="pickup-line">{{ t('store.pickup.hours.saturday') }}</p>
+              <p class="pickup-line">{{ t('store.pickup.hours.sunday') }}</p>
+            </div>
+          </div>
         </section>
 
-        <section class="terms-section">
-          <h2>5. Devoluciones y Reembolsos</h2>
-          <p>
-            Aceptamos devoluciones dentro de los 15 días posteriores a la recepción del producto, siempre y cuando:
-          </p>
-          <ul>
-            <li>El producto se encuentre en perfectas condiciones, sin usar y con empaques originales sellados</li>
-            <li>Se conserve el empaque original de Apple con todos los accesorios incluidos</li>
-            <li>El dispositivo no haya sido activado ni configurado</li>
-            <li>No presente señales de uso, ralladuras o daños</li>
-          </ul>
-          <p>
-            Para iniciar una devolución, contáctanos a través de nuestros canales de atención al cliente.
-            Los costos de envío para devoluciones corren por cuenta del comprador, salvo que el producto sea defectuoso o presente fallas de fábrica.
-          </p>
-        </section>
-
-        <section class="terms-section">
-          <h2>6. Garantía</h2>
-          <p>
-            Todos nuestros productos cuentan con garantía según las especificaciones del fabricante contra defectos de fabricación.
-            La garantía varía según el tipo de producto y fabricante. Para productos electrónicos, la garantía estándar cubre generalmente 1 año desde la fecha de compra.
-            La garantía no cubre daños causados por accidentes, líquidos, uso indebido o modificaciones no autorizadas.
-          </p>
-        </section>        <section class="terms-section">
-          <h2>6. Garantía de Productos</h2>
-          <p>
-            Todos nuestros productos cuentan con garantía contra defectos de fabricación. Si recibes un producto defectuoso,
-            contáctanos dentro de los 30 días siguientes a la compra para gestionar el cambio sin costo adicional.
-          </p>
-          <p>
-            La garantía no cubre:
-          </p>
-          <ul>
-            <li>Daños causados por uso inadecuado o accidental</li>
-            <li>Desgaste normal del producto</li>
-            <li>Alteraciones o modificaciones realizadas por el cliente</li>
-            <li>Daños causados por lavado incorrecto o no seguir las instrucciones de cuidado</li>
-          </ul>
-        </section>
-
-        <section class="terms-section">
-          <h2>7. Política de Privacidad</h2>
-          <p>
-            Nos comprometemos a proteger tu información personal. Los datos recopilados (nombre, correo electrónico, dirección, teléfono)
-            se utilizan únicamente para:
-          </p>
-          <ul>
-            <li>Procesar y entregar tu pedido</li>
-            <li>Enviarte actualizaciones sobre el estado de tu compra</li>
-            <li>Mejorar nuestros servicios y experiencia de usuario</li>
-            <li>Enviarte promociones y ofertas (solo si autorizas suscribirte)</li>
-          </ul>
-          <p>
-            No compartimos tu información con terceros, excepto cuando sea necesario para completar tu pedido
-            (empresas de mensajería, procesadores de pago). Puedes solicitar la eliminación de tus datos en cualquier momento
-            contactándonos directamente.
-          </p>
-        </section>
-
-        <section class="terms-section">
-          <h2>8. Propiedad Intelectual</h2>
-          <p>
-            Apple, el logotipo de Apple, iPhone, iPad, Mac, MacBook, Apple Watch, AirPods y otros productos y nombres de Apple son marcas registradas de Apple Inc.
-            Apple Store Pro es un distribuidor autorizado. Todas las marcas y logos son propiedad de sus respectivos titulares.
-            No está permitido el uso no autorizado de estos elementos.
-          </p>
-        </section>        <section class="terms-section">
-          <h2>9. Responsabilidades del Usuario</h2>
-          <p>Al utilizar nuestra plataforma, te comprometes a:</p>
-          <ul>
-            <li>Proporcionar información veraz y actualizada</li>
-            <li>No utilizar la plataforma para actividades ilegales o fraudulentas</li>
-            <li>No intentar acceder a áreas restringidas del sistema</li>
-            <li>Respetar los derechos de propiedad intelectual</li>
-            <li>Mantener la confidencialidad de tu cuenta (si creas una)</li>
-          </ul>
-        </section>
-
-        <section class="terms-section">
-          <h2>10. Limitación de Responsabilidad</h2>
-          <p>
-            AppsStore Pro no se hace responsable por:
-          </p>
-          <ul>
-            <li>Daños indirectos, incidentales o consecuentes derivados del uso de productos</li>
-            <li>Interrupciones del servicio por mantenimiento o problemas técnicos</li>
-            <li>Pérdida de datos o información durante el proceso de compra</li>
-            <li>Resultados deportivos de los equipos cuyos productos comercializamos</li>
-          </ul>
-          <p>
-            Nuestra responsabilidad máxima en cualquier caso no excederá el valor del producto adquirido.
-          </p>
-        </section>
-
-        <section class="terms-section">
-          <h2>11. Modificaciones de los Términos</h2>
-          <p>
-            Nos reservamos el derecho de actualizar estos términos y condiciones en cualquier momento.
-            Los cambios serán efectivos inmediatamente después de su publicación en el sitio web.
-            Es tu responsabilidad revisar periódicamente estos términos. El uso continuo de la plataforma
-            después de la publicación de cambios constituye tu aceptación de los mismos.
-          </p>
-        </section>
-
-        <section class="terms-section">
-          <h2>12. Contacto y Atención al Cliente</h2>
-          <p>
-            Para cualquier consulta, reclamo o solicitud relacionada con estos términos y condiciones,
-            puedes contactarnos a través de:
-          </p>
-          <ul>
-            <li><strong>Instagram:</strong> @appsstorepro</li>
-            <li><strong>Teléfono:</strong> +57 320 986 0099</li>
-            <li><strong>Dirección física:</strong> Centro comercial Unilago, Bogotá - Loc. 1-124, Cra. 15 # 78 - 33, Bogotá D.C.</li>
-          </ul>
-          <p>
-            Nuestro equipo de atención al cliente está disponible de lunes a sábado de 9:30 AM a 7:00 PM.
-            Domingos cerrado.
-          </p>
-        </section>
-
-
-
-        <div class="acceptance-section">
-          <button
-            class="btn-accept"
-            @click="acceptAndGoBack"
-          >
-            He leído y Acepto
+        <div class="acceptance">
+          <button class="btn-accept" @click="acceptAndGoBack">
+            {{ t('terms.accept') }}
           </button>
         </div>
-      </div>
+      </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { SOCIALS } from '@/config/brand'
+
+type TermsSection = {
+  title: string
+  paragraphs: string[]
+  bullets?: string[]
+}
+
 const router = useRouter()
+const { t, tm, locale } = useI18n()
+
+const instagramUrl = SOCIALS.instagramUrl
+const instagramHandle = SOCIALS.instagramHandle
+
+const LAST_UPDATED_ISO = '2025-12-13'
+
+const formattedLastUpdated = computed(() => {
+  const date = new Date(`${LAST_UPDATED_ISO}T00:00:00`)
+  const localeTag = locale.value === 'en' ? 'en-US' : 'es-CO'
+  return new Intl.DateTimeFormat(localeTag, { year: 'numeric', month: 'long', day: 'numeric' }).format(date)
+})
+
+const sections = computed<TermsSection[]>(() => {
+  const raw = tm('termsPage.sections') as unknown
+  return Array.isArray(raw) ? (raw as TermsSection[]) : []
+})
 
 const goBack = () => {
-  // Si hay historial, volver atrás, si no cerrar o ir al home
   if (window.history.length > 1) {
     router.back()
-  } else {
-    window.close()
-    // Si no se puede cerrar (navegador lo bloquea), ir al home
-    setTimeout(() => {
-      router.push('/')
-    }, 100)
+    return
   }
+  router.push('/')
 }
 
 const acceptAndGoBack = () => {
-  // Guardar aceptación en sessionStorage (solo para esta sesión)
   sessionStorage.setItem('termsAccepted', 'true')
-  console.log('✅ Términos aceptados guardados en sessionStorage:', sessionStorage.getItem('termsAccepted'))
-
-  // Redirigir al resumen de compras (Checkout)
   router.push('/checkout')
 }
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
+
 .terms-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 5rem 1rem;
+  background: radial-gradient(circle at 20% 20%, rgba(201, 168, 89, 0.12), transparent 55%),
+    linear-gradient(180deg, #071e25 0%, #081f2a 70%, #061318 100%);
+  padding: 5.25rem 1rem 3rem;
 }
 
-.terms-container {
-  max-width: 900px;
+.terms-shell {
+  max-width: 980px;
   margin: 0 auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(201, 168, 89, 0.18);
+  border-radius: 18px;
   overflow: hidden;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
 }
 
 .terms-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 2rem;
-  text-align: center;
   position: relative;
+  padding: 2.25rem 2rem 1.75rem;
+  border-bottom: 1px solid rgba(201, 168, 89, 0.12);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
 }
 
 .back-button {
-  position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  background: rgba(201, 168, 89, 0.1);
+  border: 1px solid rgba(201, 168, 89, 0.28);
+  color: rgb(201, 168, 89);
+  padding: 0.6rem 0.95rem;
+  border-radius: 12px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
+  gap: 0.55rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateX(-3px);
+  background: rgba(201, 168, 89, 0.16);
+  border-color: rgba(201, 168, 89, 0.45);
+  transform: translateY(-1px);
 }
 
-.back-button .icon {
-  font-size: 1.2rem;
+.icon {
+  font-size: 1.1rem;
 }
 
-.terms-header h1 {
+.header-text {
+  flex: 1;
+  text-align: center;
+}
+
+.title {
   margin: 0;
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: 'Playfair Display', 'Georgia', 'Garamond', serif;
+  font-size: 2.1rem;
+  letter-spacing: 0.2px;
+  color: rgba(246, 245, 241, 0.98);
 }
 
 .last-update {
-  margin: 0.5rem 0 0 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
+  margin: 0.6rem 0 0;
+  color: rgba(246, 245, 241, 0.78);
+  font-size: 0.95rem;
+}
+
+.updated-date {
+  color: rgba(246, 245, 241, 0.9);
+  font-weight: 600;
 }
 
 .terms-content {
   padding: 2rem;
-  max-height: 70vh;
-  overflow-y: auto;
 }
 
 .terms-section {
-  margin-bottom: 2rem;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid rgba(201, 168, 89, 0.08);
 }
 
-.terms-section h2 {
-  color: #667eea;
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 0.5rem;
+.terms-section:last-of-type {
+  border-bottom: none;
 }
 
-.terms-section p {
-  color: #333;
-  line-height: 1.8;
-  margin-bottom: 1rem;
-  text-align: justify;
+.section-title {
+  margin: 0 0 0.9rem;
+  color: rgb(201, 168, 89);
+  font-family: 'Playfair Display', 'Georgia', 'Garamond', serif;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  font-size: 1.25rem;
 }
 
-.terms-section ul {
-  margin: 1rem 0;
-  padding-left: 1.5rem;
+.paragraph {
+  margin: 0.7rem 0;
+  color: rgba(246, 245, 241, 0.84);
+  line-height: 1.75;
 }
 
-.terms-section li {
-  color: #555;
-  line-height: 1.8;
-  margin-bottom: 0.5rem;
+.bullets {
+  margin: 0.75rem 0 0.25rem;
+  padding-left: 1.25rem;
+  color: rgba(246, 245, 241, 0.84);
 }
 
-.terms-section strong {
-  color: #667eea;
-  font-weight: 600;
+.bullets li {
+  margin: 0.45rem 0;
+  line-height: 1.7;
 }
 
-.acceptance-section {
-  background: #f8f9fa;
-  padding: 2rem;
-  border-radius: 12px;
-  margin-top: 2rem;
-  text-align: center;
+.contact-section {
+  padding: 1.75rem 0 0.5rem;
 }
 
-.checkbox-container {
-  margin-bottom: 1.5rem;
+.contact-card {
+  background: rgba(201, 168, 89, 0.06);
+  border: 1px solid rgba(201, 168, 89, 0.22);
+  border-radius: 16px;
+  padding: 1.5rem;
 }
 
-.checkbox-label {
+.contact-actions {
+  margin-top: 0.75rem;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #333;
 }
 
-.checkbox-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: #667eea;
+.ig-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: rgba(246, 245, 241, 0.92);
+  text-decoration: none;
+  font-weight: 700;
+  transition: transform 0.2s ease, text-shadow 0.2s ease;
+}
+
+.ig-link:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.ig-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgb(201, 168, 89);
+  box-shadow: 0 0 0 4px rgba(201, 168, 89, 0.15);
+  flex-shrink: 0;
+}
+
+.pickup-card {
+  margin-top: 1.25rem;
+  background: rgba(6, 19, 24, 0.35);
+  border: 1px solid rgba(201, 168, 89, 0.12);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+
+.pickup-title {
+  margin: 0 0 0.75rem;
+  color: rgba(246, 245, 241, 0.96);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.pickup-hours-title {
+  margin: 1rem 0 0.6rem;
+  color: rgba(246, 245, 241, 0.9);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.pickup-line {
+  margin: 0.5rem 0;
+  color: rgba(246, 245, 241, 0.84);
+  line-height: 1.7;
+}
+
+.location-name {
+  color: rgb(201, 168, 89);
+  font-weight: 800;
+}
+
+.acceptance {
+  padding: 1.25rem 0 0.25rem;
+  display: flex;
+  justify-content: center;
 }
 
 .btn-accept {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  width: min(520px, 100%);
+  padding: 1.1rem 1.25rem;
+  background: linear-gradient(135deg, rgb(201, 168, 89) 0%, rgb(180, 145, 65) 100%);
+  color: #061318;
   border: none;
-  padding: 1rem 3rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 30px rgba(201, 168, 89, 0.18);
 }
 
-.btn-accept:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+.btn-accept:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(201, 168, 89, 0.24);
 }
 
-.btn-accept:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Scrollbar personalizada */
-.terms-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.terms-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.terms-content::-webkit-scrollbar-thumb {
-  background: #667eea;
-  border-radius: 10px;
-}
-
-.terms-content::-webkit-scrollbar-thumb:hover {
-  background: #764ba2;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
   .terms-page {
-    padding: 1rem 0.5rem;
+    padding: 4.5rem 0.75rem 2.5rem;
   }
 
-  .terms-header h1 {
-    font-size: 1.5rem;
-    margin-top: 2rem;
+  .terms-header {
+    padding: 1.5rem 1.25rem 1.25rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.9rem;
   }
 
-  .back-button {
-    top: 1rem;
-    left: 1rem;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
+  .header-text {
+    text-align: center;
+  }
+
+  .title {
+    font-size: 1.65rem;
   }
 
   .terms-content {
-    padding: 1.5rem;
-    max-height: 60vh;
+    padding: 1.25rem;
   }
+}
 
-  .terms-section h2 {
-    font-size: 1.2rem;
-  }
-
-  .terms-section p,
-  .terms-section li {
-    font-size: 0.95rem;
-  }
-
-  .acceptance-section {
-    padding: 1.5rem;
-  }
-
-  .btn-accept {
-    padding: 0.9rem 2rem;
-    font-size: 1rem;
+@media (max-width: 420px) {
+  .back-button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

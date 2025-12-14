@@ -3,7 +3,7 @@
     <div class="dashboard-header">
       <h1 class="dashboard-title">
         <span class="icon">⚙️</span>
-        Panel de Administración - SOYDANI
+        Panel de Administración - Joyería Angelie
       </h1>
       <p class="dashboard-subtitle">Gestiona productos, categorías y configuraciones</p>
     </div>
@@ -1507,6 +1507,38 @@ const closeCategoryForm = () => {
 
 <style scoped>
 .admin-dashboard {
+  /* Variables locales para look Angelie (oro/tinta) */
+  --admin-ink: #071e25;
+  --admin-gold: rgb(201, 168, 89);
+  --admin-gold-deep: rgb(215, 172, 67);
+  --admin-gold-soft: rgba(201, 168, 89, 0.22);
+  --admin-gold-soft-2: rgba(201, 168, 89, 0.32);
+
+  /* Override de la “marca” SOLO para el Admin (evita el rojo global SOYDANI) */
+  --brand-primary: var(--admin-gold);
+  --brand-primary-contrast: rgba(255, 255, 255, 0.96);
+  --brand-bg-start: var(--admin-ink);
+  --brand-bg-end: #0b2a33;
+  --brand-surface: rgba(7, 30, 37, 0.92);
+  --brand-border: var(--admin-gold-soft);
+  --brand-accent: var(--admin-gold);
+  --brand-accent-alt: rgba(215, 172, 67, 0.95);
+  --brand-accent-glow: rgba(201, 168, 89, 0.35);
+  --brand-gradient: linear-gradient(135deg, var(--brand-bg-start) 0%, var(--brand-bg-end) 100%);
+  --brand-accent-gradient: linear-gradient(135deg, var(--admin-gold) 0%, var(--admin-gold-deep) 100%);
+
+  /* Variables usadas por modales genéricos (p.ej. ConfirmationModal) */
+  --overlay-bg: rgba(0, 0, 0, 0.78);
+  --backdrop-blur: blur(8px);
+  --bg-secondary: var(--brand-surface);
+  --bg-tertiary: rgba(255, 255, 255, 0.06);
+  --text-primary: rgba(255, 255, 255, 0.96);
+  --text-secondary: rgba(255, 255, 255, 0.82);
+  --border-primary: var(--brand-border);
+  --border-secondary: rgba(201, 168, 89, 0.32);
+  --shadow-primary: rgba(0, 0, 0, 0.55);
+  --shadow-secondary: rgba(0, 0, 0, 0.35);
+
   min-height: 100vh;
   background: var(--brand-gradient);
   padding: 20px;
@@ -1539,7 +1571,7 @@ const closeCategoryForm = () => {
 }
 
 .dashboard-title .highlight {
-  color: var(--brand-success);
+  color: var(--admin-gold);
 }
 
 .dashboard-subtitle {
@@ -1804,7 +1836,7 @@ const closeCategoryForm = () => {
 .price {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--brand-success);
+  color: rgba(215, 172, 67, 0.95);
 }
 
 .status {
@@ -1815,18 +1847,21 @@ const closeCategoryForm = () => {
 }
 
 .status.available {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(201, 168, 89, 0.14);
+  color: rgba(215, 172, 67, 0.95);
+  border: 1px solid rgba(201, 168, 89, 0.22);
 }
 
 .status.out-of-stock {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(201, 168, 89, 0.22);
 }
 
 .status.coming-soon {
-  background: #dbeafe;
-  color: #1e40af;
+  background: rgba(201, 168, 89, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(201, 168, 89, 0.22);
 }
 
 .product-actions {
@@ -1915,7 +1950,7 @@ const closeCategoryForm = () => {
 }
 
 .error-state {
-  color: #f44336;
+  color: var(--admin-gold-deep);
 }
 
 .error-icon {
@@ -2054,7 +2089,7 @@ const closeCategoryForm = () => {
 
 .selected-label {
   font-weight: 600;
-  color: #60a5fa;
+  color: rgba(215, 172, 67, 0.95);
   font-size: 0.85rem;
 }
 
@@ -2078,15 +2113,15 @@ const closeCategoryForm = () => {
 }
 
 .btn-primary {
-  background: var(--brand-success);
-  color: var(--brand-primary-contrast);
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.5);
+  background: var(--brand-accent-gradient);
+  color: var(--admin-ink);
+  box-shadow: 0 10px 30px rgba(201, 168, 89, 0.28);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.6);
-  background: #059669;
+  box-shadow: 0 18px 46px rgba(201, 168, 89, 0.32);
+  background: linear-gradient(135deg, rgba(215, 172, 67, 1) 0%, rgba(201, 168, 89, 1) 100%);
 }
 
 .btn-secondary {
@@ -2099,13 +2134,13 @@ const closeCategoryForm = () => {
 }
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.2);
-  color: var(--brand-danger);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(201, 168, 89, 0.14);
+  color: var(--admin-gold);
+  border: 1px solid var(--admin-gold-soft);
 }
 
 .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.3);
+  background: rgba(201, 168, 89, 0.22);
 }
 
 .btn-sm {
@@ -2261,7 +2296,7 @@ const closeCategoryForm = () => {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(239, 68, 68, 0.9);
+  background: rgba(201, 168, 89, 0.9);
   color: white;
   border: none;
   border-radius: 50%;
@@ -2276,7 +2311,7 @@ const closeCategoryForm = () => {
 }
 
 .remove-image:hover {
-  background: rgba(239, 68, 68, 1);
+  background: rgba(215, 172, 67, 1);
 }
 
 /* Estilos para vista previa de múltiples imágenes */
@@ -2309,7 +2344,7 @@ const closeCategoryForm = () => {
   position: absolute;
   top: 5px;
   right: 5px;
-  background: rgba(239, 68, 68, 0.9);
+  background: rgba(201, 168, 89, 0.9);
   color: white;
   border: none;
   border-radius: 50%;
@@ -2324,7 +2359,7 @@ const closeCategoryForm = () => {
 }
 
 .remove-single-image:hover {
-  background: rgba(239, 68, 68, 1);
+  background: rgba(215, 172, 67, 1);
 }
 
 .image-index {
@@ -2688,9 +2723,9 @@ const closeCategoryForm = () => {
 }
 
 .status-badge.cancelled {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(201, 168, 89, 0.14);
+  color: rgba(201, 168, 89, 0.98);
+  border: 1px solid rgba(201, 168, 89, 0.22);
 }
 
 .date {
@@ -3028,9 +3063,9 @@ const closeCategoryForm = () => {
 }
 
 .showcase-status.unavailable {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(201, 168, 89, 0.14);
+  color: rgba(201, 168, 89, 0.98);
+  border: 1px solid var(--admin-gold-soft);
 }
 
 .showcase-actions {
@@ -3143,7 +3178,7 @@ const closeCategoryForm = () => {
   position: absolute;
   top: -8px;
   right: -8px;
-  background: #ef4444;
+  background: rgba(201, 168, 89, 0.9);
   color: white;
   border: none;
   border-radius: 50%;
@@ -3155,7 +3190,7 @@ const closeCategoryForm = () => {
 }
 
 .remove-image:hover {
-  background: #dc2626;
+  background: rgba(215, 172, 67, 1);
   transform: scale(1.1);
 }
 

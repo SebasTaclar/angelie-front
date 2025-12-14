@@ -4,10 +4,10 @@
       <!-- Header de la sección -->
       <div class="store-header">
         <h2 class="store-title">
-          Nuestra Tienda
+          Nuestra Joyería
         </h2>
         <p class="store-subtitle">
-          Descubre nuestros productos Apple originales con garantía oficial
+          Piezas que elevan tu estilo: anillos, aretes, collares y pulseras.
         </p>
       </div>
 
@@ -21,8 +21,8 @@
           <input
             type="search"
             v-model="searchTerm"
-            placeholder="Buscar por Nombre del Producto..."
-            aria-label="Buscar productos por título"
+            placeholder="Buscar por nombre de la pieza..."
+            aria-label="Buscar productos por nombre"
             class="search-input"
           />
 
@@ -30,230 +30,104 @@
         </div>
       </div>
 
-      <!-- Filtros de categoría -->
+      <!-- Filtros de categoría (como antes) -->
       <div class="category-filters">
         <button
           v-for="category in categoryOptions"
           :key="category"
           @click="selectedCategory = category"
-          :class="['filter-btn', { 'active': selectedCategory === category }]"
+          :class="['filter-btn', { active: selectedCategory === category }]"
         >
           {{ category }}
         </button>
       </div>
 
-      <!-- Grid de productos -->
-      <div class="products-grid">
-        <div
-          v-for="product in filteredProducts"
-          :key="product.id"
-          class="product-card"
-          @click="openProductModal(product)"
-        >
-          <!-- Categoría encima de la imagen -->
-          <span class="product-category-top">{{ product.category }}</span>
+      <!-- Productos por categoría (4 visibles + carrusel horizontal) -->
+      <div v-for="section in categorySections" :key="section.slug" class="store-category">
+        <div class="store-category-header">
+          <button
+            type="button"
+            class="store-nav"
+            aria-label="Mover a la izquierda"
+            @click="scrollCategory(section.slug, -1)"
+          >
+            ‹
+          </button>
 
-          <!-- Imagen del producto -->
-          <div class="product-image">
-            <img :src="product.images[0]" :alt="product.name" loading="lazy" decoding="async" />
-            <div v-if="product.originalPrice" class="discount-badge">
-              -{{ Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) }}%
-            </div>
-            <div v-if="!product.inStock" class="out-of-stock-overlay">
-              <span>Agotado</span>
-            </div>
-            <!-- Estado del producto en esquina inferior izquierda -->
-            <span :class="['product-status-image', getStatusClass(product.status)]">
-              {{ getStatusText(product.status) }}
-            </span>
+          <div class="store-category-title-wrap">
+            <h3 class="store-category-title">{{ section.title.toUpperCase() }}</h3>
+            <button
+              type="button"
+              class="store-view-all"
+              @click="goToCategory(section.slug)"
+            >
+              VER TODOS
+            </button>
           </div>
 
-          <!-- Información del producto -->
-          <div class="product-info">
-            <h3 class="product-name">{{ product.name }}</h3>
-            <div class="product-description">
-              <p class="truncated">
-                {{ product.description }}
-              </p>
-              <button
-                v-if="shouldShowReadMore(product.description)"
-                @click.stop="openProductModal(product)"
-                class="read-more-btn"
-              >
-                Ver más
-              </button>
-            </div>
-
-            <!-- Precios -->
-            <div class="price-section">
-              <span class="current-price">${{ product.price.toLocaleString() }}</span>
-              <span v-if="product.originalPrice" class="original-price">
-                ${{ product.originalPrice.toLocaleString() }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>      <!-- Botón del carrito flotante -->
-      <div v-if="totalItems > 0" class="floating-cart" @click="toggleCart">
-        <div class="cart-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m5 7 1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/>
-            <path d="M22 7H2"/>
-            <path d="m9 3 2-2 2 2"/>
-          </svg>
-          <span class="cart-badge">{{ totalItems }}</span>
-        </div>
-        <div class="cart-tooltip">Ver carrito de compras</div>
-      </div>
-    </div>
-
-    <!-- Modal del carrito -->
-    <div v-if="isCartOpen" class="cart-overlay" @click="closeCart">
-      <div class="cart-modal" @click.stop>
-        <div class="cart-header">
-          <h3>Tu Carrito</h3>
-          <button @click="closeCart" class="close-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m18 6-12 12"/>
-              <path d="m6 6 12 12"/>
-            </svg>
+          <button
+            type="button"
+            class="store-nav"
+            aria-label="Mover a la derecha"
+            @click="scrollCategory(section.slug, 1)"
+          >
+            ›
           </button>
         </div>
 
-        <div class="cart-content">
-          <div v-if="cartItems.length === 0" class="empty-cart">
-            <p>Tu carrito está vacío</p>
-          </div>
+        <div class="store-carousel" :ref="(el) => setCarouselRef(section.slug, el)">
+          <div
+            v-for="product in section.products"
+            :key="product.id"
+            class="product-card"
+            @click="openProductModal(product)"
+          >
+            <!-- Categoría encima de la imagen -->
+            <span class="product-category-top">{{ categoryNameById(product.category) }}</span>
 
-          <div v-else class="cart-items">
-            <div
-              v-for="item in cartItems"
-              :key="item.id"
-              class="cart-item"
-            >
-              <img :src="item.image" :alt="item.name" />
-              <div class="item-details">
-                <h4>{{ item.name }}</h4>
-                <span class="item-category">{{ item.category }}</span>
-                <span v-if="item.selectedColor" class="item-color">Color: {{ item.selectedColor }}</span>
-                <div class="item-price">${{ item.price.toLocaleString() }}</div>
+            <!-- Imagen del producto -->
+            <div class="product-image">
+              <img :src="product.images[0]" :alt="product.name" loading="lazy" decoding="async" />
+              <div v-if="product.originalPrice" class="discount-badge">
+                -{{ Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) }}%
               </div>
-              <div class="item-controls">
-                <div class="quantity-controls">
-                  <button @click="updateQuantity(item.id, item.quantity - 1, item.selectedColor)" class="quantity-btn minus">-</button>
-                  <span>{{ item.quantity }}</span>
-                  <button @click="updateQuantity(item.id, item.quantity + 1, item.selectedColor)" class="quantity-btn plus">+</button>
-                </div>
-                <button @click="removeFromCart(item.id, item.selectedColor)" class="remove-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18"/>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                  </svg>
-                </button>
+              <div v-if="product.status !== 'available'" class="out-of-stock-overlay">
+                <span>{{ getStatusText(product.status) }}</span>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="cartItems.length > 0" class="cart-footer">
-          <div class="cart-total-display">
-            <strong>Total: ${{ totalPrice.toLocaleString() }}</strong>
-          </div>
-          <div class="cart-actions">
-            <button @click="clearCart" class="btn-clear">
-              Limpiar carrito
-            </button>
-            <button @click="goToCheckout" class="btn-checkout">
-              Finalizar Pedido
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal del producto -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <button class="modal-close floating" @click="closeModal">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m18 6-12 12"/>
-            <path d="m6 6 12 12"/>
-          </svg>
-        </button>
-        <div class="modal-body">
-          <div class="modal-image">
-            <div class="image-gallery">
-              <img
-                v-for="(image, index) in selectedProduct?.images"
-                :key="index"
-                :src="image"
-                :alt="`${selectedProduct?.name} - ${index + 1}`"
-                :class="{ active: selectedImageIndex === index }"
-                @click="selectedImageIndex = index"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div v-if="selectedProduct?.images && selectedProduct.images.length > 1" class="image-dots">
-              <button
-                v-for="(image, index) in selectedProduct.images"
-                :key="index"
-                :class="{ active: selectedImageIndex === index }"
-                @click="selectedImageIndex = index"
-              ></button>
-            </div>
-          </div>
-
-          <div class="modal-info">
-            <h2 class="modal-title">{{ selectedProduct?.name }}</h2>
-            <div class="modal-category">
-              {{ selectedProduct?.category }}
-            </div>
-            <p class="modal-description">
-              {{ selectedProduct?.description }}
-            </p>
-
-            <div class="modal-price">
-              <span class="modal-current-price">${{ selectedProduct?.price?.toLocaleString() }}</span>
-              <span v-if="selectedProduct?.originalPrice" class="modal-original-price">${{ selectedProduct?.originalPrice?.toLocaleString() }}</span>
-            </div>
-
-            <div v-if="selectedProduct?.colors && selectedProduct.colors.length > 0" class="modal-colors">
-              <h4>Seleccionar color:</h4>
-              <div class="color-options">
-                <div
-                  v-for="colorName in selectedProduct.colors"
-                  :key="colorName"
-                  class="color-option"
-                  :class="{ active: modalSelectedColor === colorName }"
-                  @click="modalSelectedColor = colorName"
-                >
-                  <div
-                    class="color-circle"
-                    :style="{ backgroundColor: getColorHex(colorName), border: '2px solid ' + (modalSelectedColor === colorName ? '#26F7D7' : getColorHex(colorName)) }"
-                  ></div>
-                  <span class="color-name">{{ colorName }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-status">
-              <span :class="['status-badge', getStatusClass(selectedProduct?.status || '')]">
-                {{ getStatusText(selectedProduct?.status || '') }}
+              <!-- Estado del producto en esquina inferior izquierda -->
+              <span :class="['product-status-image', getStatusClass(product.status)]">
+                {{ getStatusText(product.status) }}
               </span>
             </div>
 
-            <button
-              @click="addToCartFromModal"
-              :disabled="selectedProduct?.status !== 'available' || (selectedProduct?.colors && selectedProduct.colors.length > 0 && !modalSelectedColor)"
-              class="modal-add-to-cart"
-            >
-              {{ selectedProduct?.status === 'available' ? 'Agregar al carrito' : 'No disponible' }}
-            </button>
+            <!-- Información del producto -->
+            <div class="product-info">
+              <h3 class="product-name">{{ product.name }}</h3>
+              <div class="product-description">
+                <p class="truncated">
+                  {{ product.description }}
+                </p>
+                <button
+                  v-if="shouldShowReadMore(product.description)"
+                  @click.stop="openProductModal(product)"
+                  class="read-more-btn"
+                >
+                  Ver más
+                </button>
+              </div>
+
+              <!-- Precios -->
+              <div class="price-section">
+                <span class="current-price">${{ product.price.toLocaleString() }}</span>
+                <span v-if="product.originalPrice" class="original-price">
+                  ${{ product.originalPrice.toLocaleString() }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
     </div>
   </section>
 </template>
@@ -261,12 +135,12 @@
 <style scoped>
 .product-store {
   padding: 3rem 0;
-  background: linear-gradient(135deg, #dad1d1 0%, #f3f0f0 100%);
+  background: linear-gradient(180deg, rgba(250, 246, 238, 0.96) 0%, rgba(246, 241, 232, 0.92) 100%);
   position: relative;
 }
 .product-store {
   padding: 3rem 0;
-  background: linear-gradient(135deg, #dad1d1 0%, #f3f0f0 100%);
+  background: linear-gradient(180deg, rgba(250, 246, 238, 0.96) 0%, rgba(246, 241, 232, 0.92) 100%);
   position: relative;
 }
 
@@ -609,25 +483,14 @@
 </style><script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCart } from '@/composables/useCart'
 import { useProducts, type Product as ProductType } from '@/composables/useProducts'
+import { useProductQuickView } from '@/composables/useProductQuickView'
 
 // Router
 const router = useRouter()
 
-// Usar el composable del carrito
-const {
-  cartItems,
-  isCartOpen,
-  totalItems,
-  totalPrice,
-  addToCart,
-  removeFromCart,
-  updateQuantity,
-  clearCart,
-  toggleCart,
-  closeCart
-} = useCart()
+// Modal global de quick view (estilo joyería, reutilizado en toda la app)
+const quickView = useProductQuickView()
 
 // Usar el composable de productos
 const {
@@ -657,69 +520,22 @@ watch(availableProducts, (newProducts) => {
   console.log('🔔 [ProductStore Watch] availableProducts cambiaron:', newProducts.length, newProducts)
 }, { immediate: true })
 
-// Estado local
-const selectedCategory = ref('Todos')
 // Término de búsqueda libre
 const searchTerm = ref('')
-
-// Estado para el modal
-const showModal = ref(false)
-const selectedProduct = ref<ProductType | null>(null)
-const modalSelectedColor = ref('')
-const selectedImageIndex = ref(0)
 
 // Productos y categorías desde el composable
 const products = computed(() => availableProducts.value)
 
 // Función para determinar si la descripción es lo suficientemente larga (más de 4 líneas aprox 150 caracteres)
 const shouldShowReadMore = (description: string) => {
-  // Considerando que cada línea tiene aproximadamente 35-40 caracteres en el ancho de tarjeta
-  // 4 líneas = aproximadamente 150 caracteres
-  return description.length > 150
+  // Aproximación: 4 líneas en card ~ 120-140 caracteres (depende del ancho).
+  // Queremos mostrar "Ver más" cuando el clamp a 4 líneas recorta el texto.
+  return (description || '').trim().length > 120
 }
 
-// Computada para mapear el producto con inStock e image (para compatibilidad con useCart)
-const mappedSelectedProduct = computed(() => {
-  if (!selectedProduct.value) return null
-  return {
-    ...selectedProduct.value,
-    inStock: selectedProduct.value.status === 'available',
-    image: selectedProduct.value.images[0] // Usar la primera imagen para el carrito
-  }
-})
-
-// Función para abrir modal del producto
+// Función para abrir modal del producto (global)
 const openProductModal = (product: ProductType) => {
-  selectedProduct.value = product
-  modalSelectedColor.value = ''
-  selectedImageIndex.value = 0
-  showModal.value = true
-}
-
-// Función para cerrar modal
-const closeModal = () => {
-  showModal.value = false
-  selectedProduct.value = null
-  modalSelectedColor.value = ''
-}
-
-// Función para ir al checkout
-const goToCheckout = () => {
-  closeCart()
-  router.push('/checkout')
-}
-
-// Función para agregar al carrito desde el modal
-const addToCartFromModal = () => {
-  if (selectedProduct.value) {
-    if (selectedProduct.value.colors && selectedProduct.value.colors.length > 0 && !modalSelectedColor.value) {
-      // Si el producto tiene colores pero no se ha seleccionado uno, no hacer nada
-      return
-    }
-    // Pasar el color seleccionado como tercer parámetro
-    addToCart(mappedSelectedProduct.value!, 1, modalSelectedColor.value || undefined)
-    closeModal()
-  }
+  quickView.open(product)
 }
 
 // Función para obtener el texto del estado del producto
@@ -750,97 +566,138 @@ const getStatusClass = (status: string) => {
   }
 }
 
-// Categorías disponibles para filtrado
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
+function categoryNameById(categoryId: string): string {
+  return (getCategoryById(categoryId)?.name || 'Sin categoría')
+}
+
+// Estado local para filtros
+const selectedCategory = ref('Todos')
+
+// Opciones de filtro (igual que antes)
 const categoryOptions = computed(() => {
-  const categoryNames = ['Todos']
+  const names = ['Todos']
   categories.value.forEach(cat => {
-    const categoryName = cat.name
-    if (!categoryNames.includes(categoryName)) {
-      categoryNames.push(categoryName)
-    }
+    if (cat?.name && !names.includes(cat.name)) names.push(cat.name)
   })
-  return categoryNames
+  return names
 })
 
-// Productos filtrados
-const filteredProducts = computed(() => {
+const categorySections = computed(() => {
   const term = searchTerm.value.trim().toLowerCase()
 
-  const mapAndEnhance = (list: ProductType[]) => list
-    .map((p: ProductType) => ({
-      ...p,
-      category: getCategoryById(p.category)?.name || 'Sin categoría',
-      inStock: p.status === 'available'
-    }))
-    .sort((a: ProductType, b: ProductType) => {
-      // Primero los disponibles (available), luego los próximamente (coming-soon)
-      if (a.status === 'available' && b.status !== 'available') return -1
-      if (a.status !== 'available' && b.status === 'available') return 1
-      return 0
-    })
+  const byCategoryId = new Map<string, ProductType[]>()
 
-  let baseList = []
-  if (selectedCategory.value === 'Todos') {
-    baseList = products.value.filter(p => p.status === 'available' || p.status === 'coming-soon')
-  } else {
-    baseList = products.value.filter(p => getCategoryById(p.category)?.name === selectedCategory.value && (p.status === 'available' || p.status === 'coming-soon'))
-  }
-
-  // Si hay término de búsqueda, filtrar SÓLO por el nombre (título)
-  if (term) {
-    baseList = baseList.filter(p => {
+  const baseList = products.value
+    .filter(p => p.status === 'available' || p.status === 'coming-soon')
+    .filter(p => {
+      if (!term) return true
       const name = String(p.name || '').toLowerCase()
       return name.includes(term)
     })
+
+  for (const p of baseList) {
+    const list = byCategoryId.get(p.category) || []
+    list.push(p)
+    byCategoryId.set(p.category, list)
   }
 
-  return mapAndEnhance(baseList)
+  // Mantener el orden de las categorías del backend
+  let sections = categories.value
+    .map(cat => {
+      const list = (byCategoryId.get(cat.id) || []).slice()
+      // Primero disponibles
+      list.sort((a, b) => {
+        if (a.status === 'available' && b.status !== 'available') return -1
+        if (a.status !== 'available' && b.status === 'available') return 1
+        return 0
+      })
+
+      return {
+        id: cat.id,
+        title: cat.name,
+        slug: slugify(cat.name),
+        products: list
+      }
+    })
+    .filter(s => s.products.length > 0)
+
+  // Aplicar filtro por categoría seleccionada
+  if (selectedCategory.value !== 'Todos') {
+    sections = sections.filter(s => s.title === selectedCategory.value)
+  }
+
+  return sections
 })
 
-// Colores de Apple predeterminados (incluye variantes en inglés y español)
-const appleColors: Record<string, string> = {
-  // Nueva paleta actualizada
-  'naranja cósmico': '#ff5e00',
-  'naranja cosmico': '#ff5e00',
-  'azul profundo': '#003d5c',
-  'plata': '#c0c0c0',
-  'silver': '#c0c0c0',
-  'azul': '#1976d2',
-  'blue': '#1976d2',
-  'negro': '#000000',
-  'black': '#000000',
-  'blanco': '#ffffff',
-  'white': '#ffffff',
-  'azul neblina': '#a8c7dd',
-  'dorado claro': '#f7e7a1',
-  'azul cielo': '#87ceeb',
-  'rosa': '#ff69b4',
-  'pink': '#ff69b4',
-  'amarillo': '#ffeb3b',
-  'yellow': '#ffeb3b',
-  'verde': '#4caf50',
-  'green': '#4caf50',
-  'púrpura': '#9c27b0',
-  'purpura': '#9c27b0',
-  'purple': '#9c27b0',
-  'morado': '#9c27b0',
-  'oro': '#ffd700',
-  'gold': '#ffd700'
+const carouselRefs = ref<Record<string, HTMLElement | null>>({})
+
+function setCarouselRef(slug: string, el: unknown) {
+  // Vue puede pasar un Element, un ComponentPublicInstance (con $el), o null
+  const hasDollarEl = (value: unknown): value is { $el: unknown } => {
+    return typeof value === 'object' && value !== null && '$el' in value
+  }
+
+  const node: HTMLElement | null =
+    el instanceof HTMLElement
+      ? el
+      : hasDollarEl(el) && el.$el instanceof HTMLElement
+        ? el.$el
+        : null
+
+  carouselRefs.value = { ...carouselRefs.value, [slug]: node }
 }
 
-// Normaliza nombres y obtiene color; fallback a gris claro
-const getColorHex = (colorName: string): string => {
-  if (!colorName) return '#cccccc'
-  const key = colorName.trim().toLowerCase()
-  return appleColors[key] || '#cccccc'
+function scrollCategory(slug: string, direction: -1 | 1) {
+  const el = carouselRefs.value[slug]
+  if (!el) return
+  const amount = Math.max(320, Math.floor(el.clientWidth * 0.92))
+  el.scrollBy({ left: amount * direction, behavior: 'smooth' })
 }
+
+function goToCategory(slug: string) {
+  if (router.hasRoute(slug)) {
+    router.push({ name: slug })
+    return
+  }
+  router.push('/')
+}
+
+// Colores/materiales (joyería) + fallback compatible con nombres comunes
+// (Reservado) Helpers de colores para joyería.
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap');
+
 .product-store {
-  padding: 3rem 0;
-  background: linear-gradient(135deg, #dad1d1 0%, #f3f0f0 100%);
+  /* Variables locales para look joyería (reutiliza paleta ya usada en el proyecto) */
+  --store-ink: #071e25;
+  --store-gold: rgb(201, 168, 89);
+  --store-gold-deep: rgb(215, 172, 67);
+  --store-gold-glow: rgba(201, 168, 89, 0.35);
+
+  /* Sobrescribe acentos del componente sin tocar el resto del sitio */
+  --brand-primary: var(--store-ink);
+  --brand-success: var(--store-gold);
+  --brand-accent-alt: var(--store-gold-deep);
+
+  padding: 4rem 0;
+  /* Fondo ligeramente distinto al de “Nuestras Categorías” (misma familia, tono un poco más profundo) */
+  background: linear-gradient(180deg, rgba(250, 246, 238, 0.96) 0%, rgba(246, 241, 232, 0.92) 100%);
   position: relative;
+  /* Importante: en modo oscuro el texto global es blanco. Aquí forzamos tinta oscura porque el fondo es claro. */
+  color: rgba(7, 30, 37, 0.92);
 }
 
 .container {
@@ -861,18 +718,26 @@ const getColorHex = (colorName: string): string => {
   margin-bottom: 1rem;
   color: var(--brand-primary);
   text-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  font-family: 'Playfair Display', 'Georgia', 'Garamond', serif;
+  letter-spacing: 0.5px;
 }
 
 .store-title .highlight {
   color: var(--brand-success);
-  text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  text-shadow: 0 0 20px var(--store-gold-glow);
 }
 
 .store-subtitle {
   font-size: 1.2rem;
-  color: #666;
+  color: rgba(7, 30, 37, 0.72);
   max-width: 600px;
   margin: 0 auto;
+}
+
+.store-nav,
+.store-view-all,
+.store-category-title {
+  color: rgba(7, 30, 37, 0.92);
 }
 
 /* Barra de búsqueda */
@@ -915,7 +780,7 @@ const getColorHex = (colorName: string): string => {
 .search-input:focus {
   background: white;
   border-color: var(--brand-success);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 0 3px rgba(201, 168, 89, 0.14);
 }
 
 .search-input:hover {
@@ -967,9 +832,117 @@ const getColorHex = (colorName: string): string => {
   flex-wrap: wrap;
 }
 
+/* Carrusel por categoría (layout). No toca estilos de las cards existentes. */
+.store-category {
+  margin-bottom: 2.25rem;
+}
+
+.store-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.store-category-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.store-category-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.store-view-all {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.store-nav {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0.25rem 0.4rem;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.store-carousel {
+  display: flex;
+  gap: 1.1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.store-carousel > .product-card {
+  flex: 0 0 calc((100% - 0.6rem) / 4);
+  scroll-snap-align: start;
+}
+
+@media (max-width: 1100px) {
+  .store-carousel > .product-card {
+    flex-basis: calc((100% - 2.2rem) / 3);
+  }
+}
+
+@media (max-width: 820px) {
+  .store-carousel > .product-card {
+    flex-basis: calc((100% - 1.1rem) / 2);
+  }
+}
+
+@media (max-width: 520px) {
+  /* Header de categoría estilo móvil (como la referencia): flechas a los lados y texto centrado */
+  .store-category-header {
+    width: 100%;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0 0.25rem;
+  }
+
+  .store-category-title-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .store-nav {
+    flex: 0 0 auto;
+    align-self: flex-start;
+  }
+
+  .store-carousel {
+    /* Un poco más de ancho útil para cada card */
+    gap: 0.75rem;
+    scroll-padding: 0.5rem;
+    padding: 0 0 0.5rem;
+  }
+
+  .store-carousel > .product-card {
+    /* En celular: que se vean 2 cards a la vez */
+    flex-basis: calc((100% - 0.4rem) / 2);
+  }
+}
+
 .filter-btn {
   padding: 0.75rem 1.5rem;
-  border: 2px solid #e5e5e5;
+  border: 2px solid rgba(201, 168, 89, 0.22);
   background: white;
   border-radius: 25px;
   font-weight: 600;
@@ -979,9 +952,9 @@ const getColorHex = (colorName: string): string => {
 
 .filter-btn:hover,
 .filter-btn.active {
-  border-color: var(--brand-success);
-  background: var(--brand-success);
-  color: white;
+  border-color: rgba(201, 168, 89, 0.5);
+  background: rgba(7, 30, 37, 0.96);
+  color: var(--brand-success);
   transform: translateY(-2px);
 }
 
@@ -1044,8 +1017,8 @@ const getColorHex = (colorName: string): string => {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
-  background: rgba(16, 185, 129, 0.9);
-  color: white;
+  background: rgba(201, 168, 89, 0.92);
+  color: rgba(7, 30, 37, 0.96);
   font-size: 0.6rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1071,8 +1044,9 @@ const getColorHex = (colorName: string): string => {
 }
 
 .product-status-image.status-available {
-  background: rgba(16, 185, 129, 0.9);
-  color: white;
+  background: rgba(7, 30, 37, 0.96);
+  color: rgba(201, 168, 89, 0.98);
+  border: 1px solid rgba(201, 168, 89, 0.35);
 }
 
 .product-status-image.status-coming-soon {
@@ -1086,10 +1060,11 @@ const getColorHex = (colorName: string): string => {
 }
 
 .product-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.94);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(201, 168, 89, 0.22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   position: relative;
   display: flex;
@@ -1100,12 +1075,12 @@ const getColorHex = (colorName: string): string => {
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.12), 0 0 0 3px rgba(201, 168, 89, 0.12);
 }
 
 .product-image {
   position: relative;
-  height: 160px;
+  height: 240px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -1160,6 +1135,8 @@ const getColorHex = (colorName: string): string => {
   font-weight: 700;
   margin: 0 0 0.4rem 0;
   color: var(--brand-primary);
+  font-family: 'Playfair Display', 'Georgia', 'Garamond', serif;
+  letter-spacing: 0.2px;
 }
 
 .product-description {
@@ -1267,6 +1244,89 @@ const getColorHex = (colorName: string): string => {
   color: #999;
 }
 
+/* Móvil: cards compactas (descripción/precios más pequeños y sin overflow) */
+@media (max-width: 520px) {
+  .product-card {
+    min-width: 0;
+  }
+
+  .product-image {
+    height: 140px;
+  }
+
+  .product-info {
+    padding: 0.55rem 0.65rem;
+  }
+
+  .product-name {
+    font-size: 0.92rem;
+    line-height: 1.25;
+    margin: 0 0 0.25rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-description {
+    font-size: 0.72rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .product-description p.truncated {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    max-height: calc(1.5em * 2);
+  }
+
+  .read-more-btn {
+    font-size: 0.72rem;
+    padding: 0.25rem 0;
+    margin-top: 0.2rem;
+  }
+
+  .price-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+  }
+
+  .current-price,
+  .original-price {
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .current-price {
+    font-size: 0.95rem;
+  }
+
+  .original-price {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .product-image {
+    height: 175px;
+  }
+
+  .product-name {
+    font-size: 0.88rem;
+  }
+
+  .product-description {
+    font-size: 0.7rem;
+  }
+
+  .current-price {
+    font-size: 0.92rem;
+  }
+}
+
 .product-colors-inline {
   display: flex;
   align-items: center;
@@ -1297,8 +1357,9 @@ const getColorHex = (colorName: string): string => {
 }
 
 .status-available {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: rgba(201, 168, 89, 0.16);
+  color: rgba(7, 30, 37, 0.96);
+  border: 1px solid rgba(201, 168, 89, 0.28);
 }
 
 .status-coming-soon {
@@ -1325,8 +1386,8 @@ const getColorHex = (colorName: string): string => {
 .btn-add-cart {
   width: 100%;
   padding: 0.8rem 1.2rem;
-  background: linear-gradient(135deg, var(--brand-success) 0%, #0d9466 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--store-gold) 0%, var(--store-gold-deep) 100%);
+  color: rgba(7, 30, 37, 0.96);
   border: none;
   border-radius: 12px;
   font-weight: 600;
@@ -1337,7 +1398,7 @@ const getColorHex = (colorName: string): string => {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 8px 22px rgba(201, 168, 89, 0.22);
   position: relative;
   overflow: hidden;
 }
@@ -1354,9 +1415,9 @@ const getColorHex = (colorName: string): string => {
 }
 
 .btn-add-cart:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0d9466 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--store-gold-deep) 0%, var(--store-gold) 100%);
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 28px rgba(201, 168, 89, 0.28);
 }
 
 .btn-add-cart:hover:not(:disabled)::before {
@@ -1365,7 +1426,7 @@ const getColorHex = (colorName: string): string => {
 
 .btn-add-cart:active:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 18px rgba(201, 168, 89, 0.22);
 }
 
 .btn-add-cart:disabled {
@@ -1416,7 +1477,7 @@ const getColorHex = (colorName: string): string => {
 }
 
 .btn-confirm-color:hover:not(:disabled) {
-  background: #059669;
+  background: var(--store-gold-deep);
   transform: translateY(-1px);
 }
 
@@ -1428,7 +1489,7 @@ const getColorHex = (colorName: string): string => {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 16px;
   padding: 0.875rem;
-  border: 2px solid rgba(16, 185, 129, 0.1);
+  border: 2px solid rgba(201, 168, 89, 0.14);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
@@ -1437,7 +1498,7 @@ const getColorHex = (colorName: string): string => {
   height: 42px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--brand-success) 0%, #0d9466 100%);
+  background: linear-gradient(135deg, var(--store-gold) 0%, var(--store-gold-deep) 100%);
   color: white;
   font-weight: 700;
   cursor: pointer;
@@ -1445,13 +1506,13 @@ const getColorHex = (colorName: string): string => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 2px 10px rgba(201, 168, 89, 0.2);
 }
 
 .quantity-btn:hover {
-  background: linear-gradient(135deg, #0d9466 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--store-gold-deep) 0%, var(--store-gold) 100%);
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 16px rgba(201, 168, 89, 0.28);
 }
 
 .quantity-btn:active {
@@ -1463,11 +1524,11 @@ const getColorHex = (colorName: string): string => {
   font-size: 1.1rem;
   min-width: 30px;
   text-align: center;
-  color: var(--brand-success);
+  color: var(--brand-primary);
   background: white;
   padding: 0.5rem;
   border-radius: 10px;
-  border: 2px solid rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(201, 168, 89, 0.22);
 }
 
 /* Carrito flotante */
@@ -1480,7 +1541,7 @@ const getColorHex = (colorName: string): string => {
   padding: 1rem;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 30px rgba(201, 168, 89, 0.28);
   transition: all 0.3s ease;
   z-index: 1000;
   display: flex;
@@ -1492,7 +1553,7 @@ const getColorHex = (colorName: string): string => {
 
 .floating-cart:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 18px 46px rgba(201, 168, 89, 0.32);
 }
 
 .cart-icon {
@@ -1745,12 +1806,18 @@ const getColorHex = (colorName: string): string => {
 
 .btn-checkout {
   background: var(--brand-success);
-  color: white;
+  color: rgba(7, 30, 37, 0.96);
 }
 
 .btn-checkout:hover {
-  background: #0d9466;
+  background: var(--store-gold-deep);
   transform: translateY(-2px);
+}
+
+/* En el modal del carrito, el número de cantidad heredaba blanco sobre fondo claro */
+.cart-item .quantity-controls span {
+  color: rgba(7, 30, 37, 0.96);
+  font-weight: 800;
 }
 
 /* Responsive */
@@ -2977,5 +3044,43 @@ const getColorHex = (colorName: string): string => {
     padding: 0.3rem;
     min-width: 24px;
   }
+}
+
+/* === Ajustes de legibilidad (Angelie) ===
+   Nota: este bloque va al final para ganar prioridad sobre estilos legacy. */
+.product-store {
+  color: rgba(7, 30, 37, 0.92);
+}
+
+.product-store .store-nav,
+.product-store .store-view-all,
+.product-store .store-category-title {
+  color: rgba(7, 30, 37, 0.92);
+}
+
+.product-store .search-input:focus {
+  border-color: rgb(201, 168, 89);
+  box-shadow: 0 0 0 3px rgba(201, 168, 89, 0.14);
+}
+
+.product-store .filter-btn:hover,
+.product-store .filter-btn.active {
+  border-color: rgba(201, 168, 89, 0.5);
+  background: rgba(7, 30, 37, 0.96);
+  color: rgb(201, 168, 89);
+}
+
+.product-store .btn-checkout {
+  background: rgb(201, 168, 89);
+  color: rgba(7, 30, 37, 0.96);
+}
+
+.product-store .btn-checkout:hover {
+  background: rgb(215, 172, 67);
+}
+
+.product-store .cart-item .quantity-controls span {
+  color: rgba(7, 30, 37, 0.96);
+  font-weight: 800;
 }
 </style>
