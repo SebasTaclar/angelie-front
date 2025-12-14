@@ -1,30 +1,34 @@
 <template>
   <main class="home-main">
-    <!-- Efecto de nieve navideña -->
-    <div class="snowflakes" aria-hidden="true">
-      <div class="snowflake" v-for="n in 50" :key="n">❅</div>
+    <!-- Efecto de brillo de diamantes flotantes -->
+    <div class="sparkles" aria-hidden="true">
+      <div class="sparkle" v-for="n in 30" :key="n">✨</div>
     </div>
 
-    <!-- Partículas tecnológicas flotantes -->
-    <div class="tech-particles" aria-hidden="true">
+    <!-- Partículas doradas flotantes -->
+    <div class="gold-particles" aria-hidden="true">
       <div class="particle" v-for="n in 20" :key="n"></div>
     </div>
 
     <section class="section">
       <MainBanner @showRules="openRulesModal" />
     </section>
-    <section class="section">
-      <ProductShowcase />
+
+    <section id="categories" class="section">
+      <CategoriesSection />
     </section>
 
-    <section class="section">
+    <section id="products" class="section">
       <ProductStore />
     </section>
 
-    <section class="section">
-      <ContactSection />
+    <section id="videos" class="section">
+      <VideosSection />
     </section>
 
+    <section id="contact" class="section section--visit-footer-divider">
+      <ContactSection />
+    </section>
 
     <section class="section offset">
       <Footer_ />
@@ -45,10 +49,11 @@ import { ref, defineAsyncComponent } from 'vue'
 import MainBanner from '@/components/MainBanner.vue';
 
 // Carga diferida (code splitting) de secciones pesadas
-const ProductShowcase = defineAsyncComponent(() => import('@/components/ProductShowcase.vue'))
 const ProductStore = defineAsyncComponent(() => import('@/components/ProductStore.vue'))
+const VideosSection = defineAsyncComponent(() => import('@/components/VideosSection.vue'))
 const ContactSection = defineAsyncComponent(() => import('@/components/ContactSection.vue'))
 const Footer_ = defineAsyncComponent(() => import('@/components/Footer_.vue'))
+const CategoriesSection = defineAsyncComponent(() => import('@/components/CategoriesSection.vue'))
 
 // Estado del modal de reglas
 const showRulesModal = ref(false)
@@ -77,35 +82,33 @@ defineExpose({
 <style scoped>
 /* === EFECTOS VISUALES === */
 
-/* Animación de nieve cayendo */
-@keyframes snowfall {
+/* Animación de brillo de diamantes */
+@keyframes sparkle {
   0% {
-    top: -10%;
+    transform: scale(0) rotate(0deg);
     opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
-}
-
-/* Movimiento horizontal de nieve */
-@keyframes sway {
-  0%, 100% {
-    transform: translateX(0);
   }
   50% {
-    transform: translateX(100px);
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
   }
 }
 
-/* Partículas tecnológicas flotantes */
+/* Movimiento ondulante dorado */
+@keyframes float-gold {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-30px) translateX(20px);
+  }
+}
+
+/* Partículas doradas flotantes */
 @keyframes float-particle {
   0% {
     transform: translateY(0) translateX(0) rotate(0deg);
@@ -127,19 +130,19 @@ defineExpose({
   }
 }
 
-/* Resplandor rojo pulsante */
+/* Brillo dorado pulsante */
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+    box-shadow: 0 0 20px rgba(215, 172, 67, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+    box-shadow: 0 0 40px rgba(215, 172, 67, 0.6);
   }
 }
 
 .home-main {
   padding-top: 60px;
-  background: linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
   color: var(--white);
   width: 100%;
   max-width: 100vw;
@@ -150,8 +153,15 @@ defineExpose({
   min-height: 100vh;
 }
 
-/* === EFECTO DE NIEVE === */
-.snowflakes {
+@media (max-width: 480px) {
+  .sparkles,
+  .gold-particles {
+    display: none;
+  }
+}
+
+/* === EFECTO DE DIAMANTES BRILLANTES === */
+.sparkles {
   position: fixed;
   top: 0;
   left: 0;
@@ -162,32 +172,50 @@ defineExpose({
   overflow: hidden;
 }
 
-.snowflake {
+.sparkle {
   position: absolute;
   top: -10%;
-  color: #fff;
-  font-size: 1em;
+  color: #d7ac43;
+  font-size: 1.5em;
   user-select: none;
-  animation: snowfall linear infinite, sway ease-in-out infinite;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  animation: sparkle ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(215, 172, 67, 0.9), 0 0 20px rgba(215, 172, 67, 0.5);
+  filter: brightness(1.2);
 }
 
-.snowflake:nth-child(1n) { left: 1%; animation-duration: 12s, 3s; animation-delay: 0s, 0s; font-size: 0.8em; }
-.snowflake:nth-child(2n) { left: 10%; animation-duration: 15s, 4s; animation-delay: 1s, 0.5s; font-size: 1.2em; }
-.snowflake:nth-child(3n) { left: 20%; animation-duration: 18s, 5s; animation-delay: 2s, 1s; font-size: 1em; }
-.snowflake:nth-child(4n) { left: 30%; animation-duration: 14s, 3.5s; animation-delay: 3s, 1.5s; font-size: 1.5em; }
-.snowflake:nth-child(5n) { left: 40%; animation-duration: 16s, 4.5s; animation-delay: 1.5s, 0s; font-size: 0.9em; }
-.snowflake:nth-child(6n) { left: 50%; animation-duration: 13s, 3s; animation-delay: 2.5s, 0.5s; font-size: 1.3em; }
-.snowflake:nth-child(7n) { left: 60%; animation-duration: 17s, 5s; animation-delay: 0.5s, 1s; font-size: 1.1em; }
-.snowflake:nth-child(8n) { left: 70%; animation-duration: 19s, 4s; animation-delay: 3.5s, 1.5s; font-size: 0.8em; }
-.snowflake:nth-child(9n) { left: 80%; animation-duration: 14s, 3.5s; animation-delay: 1s, 0s; font-size: 1.4em; }
-.snowflake:nth-child(10n) { left: 90%; animation-duration: 16s, 4.5s; animation-delay: 2s, 0.5s; font-size: 1em; }
-.snowflake:nth-child(11n) { left: 5%; animation-duration: 15s, 3s; animation-delay: 0.5s, 1s; font-size: 1.2em; }
-.snowflake:nth-child(12n) { left: 15%; animation-duration: 17s, 4s; animation-delay: 2.5s, 1.5s; font-size: 0.9em; }
-.snowflake:nth-child(13n) { left: 25%; animation-duration: 13s, 5s; animation-delay: 1.5s, 0s; font-size: 1.1em; }
+.sparkle:nth-child(1n) { left: 1%; animation-duration: 4s; animation-delay: 0s; font-size: 1.2em; }
+.sparkle:nth-child(2n) { left: 10%; animation-duration: 5s; animation-delay: 0.5s; font-size: 1.5em; }
+.sparkle:nth-child(3n) { left: 20%; animation-duration: 4.5s; animation-delay: 1s; font-size: 1.3em; }
+.sparkle:nth-child(4n) { left: 30%; animation-duration: 5.5s; animation-delay: 1.5s; font-size: 1.4em; }
+.sparkle:nth-child(5n) { left: 40%; animation-duration: 4.2s; animation-delay: 0s; font-size: 1.2em; }
+.sparkle:nth-child(6n) { left: 50%; animation-duration: 5.2s; animation-delay: 0.5s; font-size: 1.5em; }
+.sparkle:nth-child(7n) { left: 60%; animation-duration: 5.5s; animation-delay: 0.5s; font-size: 1.1em; }
+.sparkle:nth-child(8n) { left: 70%; animation-duration: 6s; animation-delay: 1s; font-size: 1.3em; }
+.sparkle:nth-child(9n) { left: 80%; animation-duration: 4.8s; animation-delay: 1.5s; font-size: 1.2em; }
+.sparkle:nth-child(10n) { left: 90%; animation-duration: 5.5s; animation-delay: 0.3s; font-size: 1.4em; }
+.sparkle:nth-child(11n) { left: 5%; animation-duration: 5.2s; animation-delay: 0.8s; font-size: 1.2em; }
+.sparkle:nth-child(12n) { left: 15%; animation-duration: 4.5s; animation-delay: 1.2s; font-size: 1.5em; }
+.sparkle:nth-child(13n) { left: 25%; animation-duration: 5s; animation-delay: 0.4s; font-size: 1.1em; }
+.sparkle:nth-child(14n) { left: 35%; animation-duration: 5.3s; animation-delay: 1.1s; font-size: 1.3em; }
+.sparkle:nth-child(15n) { left: 45%; animation-duration: 4.7s; animation-delay: 0.7s; font-size: 1.2em; }
+.sparkle:nth-child(16n) { left: 55%; animation-duration: 5.5s; animation-delay: 1.3s; font-size: 1.4em; }
+.sparkle:nth-child(17n) { left: 65%; animation-duration: 4.9s; animation-delay: 0.6s; font-size: 1.2em; }
+.sparkle:nth-child(18n) { left: 75%; animation-duration: 5.2s; animation-delay: 1.4s; font-size: 1.3em; }
+.sparkle:nth-child(19n) { left: 85%; animation-duration: 5.6s; animation-delay: 0.9s; font-size: 1.5em; }
+.sparkle:nth-child(20n) { left: 95%; animation-duration: 4.8s; animation-delay: 1.6s; font-size: 1.2em; }
+.sparkle:nth-child(21n) { left: 12%; animation-duration: 5.3s; animation-delay: 0.5s; font-size: 1.4em; }
+.sparkle:nth-child(22n) { left: 22%; animation-duration: 5.1s; animation-delay: 1s; font-size: 1.2em; }
+.sparkle:nth-child(23n) { left: 32%; animation-duration: 4.9s; animation-delay: 1.3s; font-size: 1.3em; }
+.sparkle:nth-child(24n) { left: 42%; animation-duration: 5.4s; animation-delay: 0.7s; font-size: 1.5em; }
+.sparkle:nth-child(25n) { left: 52%; animation-duration: 5s; animation-delay: 1.2s; font-size: 1.1em; }
+.sparkle:nth-child(26n) { left: 62%; animation-duration: 5.5s; animation-delay: 0.4s; font-size: 1.4em; }
+.sparkle:nth-child(27n) { left: 72%; animation-duration: 4.7s; animation-delay: 1.5s; font-size: 1.2em; }
+.sparkle:nth-child(28n) { left: 82%; animation-duration: 5.2s; animation-delay: 0.8s; font-size: 1.3em; }
+.sparkle:nth-child(29n) { left: 92%; animation-duration: 5.1s; animation-delay: 1.1s; font-size: 1.5em; }
+.sparkle:nth-child(30n) { left: 7%; animation-duration: 5.3s; animation-delay: 0.6s; font-size: 1.2em; }
 
-/* === PARTÍCULAS TECNOLÓGICAS === */
-.tech-particles {
+/* === PARTÍCULAS DORADAS === */
+.gold-particles {
   position: fixed;
   top: 0;
   left: 0;
@@ -203,13 +231,13 @@ defineExpose({
   bottom: -20px;
   width: 4px;
   height: 4px;
-  background: linear-gradient(135deg, #DC2626, #EF4444);
+  background: linear-gradient(135deg, #d7ac43, #f4c430);
   border-radius: 50%;
   animation: float-particle linear infinite;
   box-shadow:
-    0 0 10px rgba(220, 38, 38, 0.5),
-    0 0 20px rgba(220, 38, 38, 0.3),
-    0 0 30px rgba(220, 38, 38, 0.2);
+    0 0 10px rgba(215, 172, 67, 0.5),
+    0 0 20px rgba(215, 172, 67, 0.3),
+    0 0 30px rgba(215, 172, 67, 0.2);
 }
 
 .particle:nth-child(1) { left: 5%; animation-duration: 8s; animation-delay: 0s; width: 6px; height: 6px; }
@@ -235,12 +263,29 @@ defineExpose({
 
 .section {
   padding: 0.1px 0 0 0;
-  border-bottom: 1px solid rgba(220, 38, 38, 0.1);
+  border-bottom: 1px solid rgba(215, 172, 67, 0.1);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  position: relative;
   z-index: 10;
+}
+
+/* Separador fuerte solo entre "Visítanos" y el Footer */
+.section--visit-footer-divider {
+  border-bottom: 2px solid rgba(201, 168, 89, 0.28);
+  position: relative;
+}
+
+.section--visit-footer-divider::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 89, 0.55), transparent);
+  box-shadow: 0 0 18px rgba(201, 168, 89, 0.25);
+  pointer-events: none;
 }
 
 .section:last-child {
@@ -254,7 +299,7 @@ defineExpose({
 
 /* Responsive: reducir efectos en móviles */
 @media (max-width: 768px) {
-  .snowflake:nth-child(n+20) {
+  .sparkle:nth-child(n+15) {
     display: none;
   }
 
@@ -262,7 +307,6 @@ defineExpose({
     display: none;
   }
 }
-
 
 /* Enlace flotante para prueba de sincronización */
 .test-sync-link {

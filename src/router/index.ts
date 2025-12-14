@@ -13,6 +13,23 @@ declare module 'vue-router' {
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to) {
+    if (to.hash) {
+      return new Promise(resolve => {
+        // Espera un tick para asegurar que el DOM de la ruta ya renderizó.
+        requestAnimationFrame(() => {
+          const el = document.querySelector(to.hash)
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            resolve(false)
+            return
+          }
+          resolve({ left: 0, top: 0 })
+        })
+      })
+    }
+    return { left: 0, top: 0 }
+  },
   routes: [
     {
       path: '/',
@@ -29,39 +46,49 @@ const router = createRouter({
     },
 
     {
-      path: '/iphone',
-      name: 'iphone',
-      component: () => import('../views/IphonePage.vue'),
+      path: '/anillos',
+      name: 'anillos',
+      component: () => import('../views/CategoryProducts.vue'),
+      props: { slug: 'anillos', title: 'Anillos' },
     },
 
     {
-      path: '/mac',
-      name: 'mac',
-      component: () => import('../views/MacPage.vue'),
+      path: '/collares',
+      name: 'collares',
+      component: () => import('../views/CategoryProducts.vue'),
+      props: { slug: 'collares', title: 'Collares' },
     },
 
     {
-      path: '/ipad',
-      name: 'ipad',
-      component: () => import('../views/IpadPage.vue'),
+      path: '/aretes',
+      name: 'aretes',
+      component: () => import('../views/CategoryProducts.vue'),
+      props: { slug: 'aretes', title: 'Aretes' },
     },
 
     {
-      path: '/watch',
-      name: 'watch',
-      component: () => import('../views/AppleWatchPage.vue'),
+      path: '/pulseras',
+      name: 'pulseras',
+      component: () => import('../views/CategoryProducts.vue'),
+      props: { slug: 'pulseras', title: 'Pulseras' },
     },
 
     {
-      path: '/accesorios',
-      name: 'accesorios',
-      component: () => import('../views/AccesoriosPage.vue'),
+      path: '/esmeraldas',
+      name: 'esmeraldas',
+      component: () => import('../views/CategoryProducts.vue'),
+      props: { slug: 'esmeraldas', title: 'Esmeraldas' },
     },
 
     {
-      path: '/airpods',
-      name: 'airpods',
+      path: '/ofertas',
+      name: 'ofertas',
       component: () => import('../views/AirPodsPage.vue'),
+    },
+
+    {
+      path: '/perfumes',
+      redirect: '/ofertas',
     },
 
     {

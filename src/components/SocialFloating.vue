@@ -19,7 +19,7 @@
   <!-- Redes sociales flotantes a la derecha -->
   <div class="floating-social">
     <a
-      href="https://www.facebook.com/danirodriguez.col"
+      href="https://www.facebook.com/joyeriaangelie/"
       target="_blank"
       rel="noopener"
       class="social-btn facebook"
@@ -31,7 +31,7 @@
     </a>
 
     <a
-      href="https://www.instagram.com/soydanirodriguezz/"
+      href="https://www.instagram.com/Joyeriaangelie/"
       target="_blank"
       rel="noopener"
       class="social-btn instagram"
@@ -43,7 +43,7 @@
     </a>
 
     <a
-      href="https://www.tiktok.com/@soydanirodriguezz"
+      href="https://www.tiktok.com/@joyeria_angelie"
       target="_blank"
       rel="noopener"
       class="social-btn tiktok"
@@ -57,18 +57,22 @@
 </template>
 
 <script setup lang="ts">
-// Número en formato internacional (sin '+')
-const rawNumber = '573209860099'
-// Normaliza a solo dígitos
-const whatsappNumber = rawNumber.replace(/[^\d]/g, '')
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+// Número de WhatsApp de Joyería Angelie
+const rawNumber = '3213727442'
+// Normaliza a formato internacional (prepend 57 para Colombia)
+const whatsappNumber = '57' + rawNumber.replace(/[^\d]/g, '')
 
 // Validación mínima: debe empezar por 57 y tener al menos 12 dígitos (57 + 10)
 const isValidWhatsAppNumber = /^57\d{10}$/.test(whatsappNumber)
 
-const defaultMessage = 'Hola! Me interesa un producto de SOYDANI. ¿Me pueden brindar más información?'
-// Endpoint alternativo más tolerante que wa.me
+const { t } = useI18n()
+const defaultMessage = computed(() => t('whatsapp.defaultMessage'))
+// Endpoint WhatsApp
 const whatsappLink = isValidWhatsAppNumber
-  ? `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(defaultMessage)}`
+  ? `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(defaultMessage.value)}`
   : '#'
 
 
