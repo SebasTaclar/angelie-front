@@ -31,18 +31,18 @@ import { useI18n } from 'vue-i18n'
 type TikTokVideo = { id: string; url: string }
 
 const videos: TikTokVideo[] = [
-  {
-    id: '7564589333794098450',
-    url: 'https://www.tiktok.com/@joyeria_angelie/video/7564589333794098450'
-  },
-  {
-    id: '7566079307521543431',
-    url: 'https://www.tiktok.com/@joyeria_angelie/video/7566079307521543431'
-  },
-  {
-    id: '7528947477798505784',
-    url: 'https://www.tiktok.com/@joyeria_angelie/video/7528947477798505784'
-  }
+  // {
+  //   id: '7564589333794098450',
+  //   url: 'https://www.tiktok.com/@joyeria_angelie/video/7564589333794098450'
+  // },
+  // {
+  //   id: '7566079307521543431',
+  //   url: 'https://www.tiktok.com/@joyeria_angelie/video/7566079307521543431'
+  // },
+  // {
+  //   id: '7528947477798505784',
+  //   url: 'https://www.tiktok.com/@joyeria_angelie/video/7528947477798505784'
+  // }
 ]
 
 const { t } = useI18n()
