@@ -212,7 +212,8 @@ const messages = {
 		videos: {
 			title: 'Videos',
 			subtitle: 'Mira algunos de nuestros favoritos',
-			viewOnTikTok: 'Ver en TikTok'
+			viewOnTikTok: 'Ver en TikTok',
+			clickToLoad: 'Click para cargar videos'
 		}
 	},
 	en: {
@@ -421,7 +422,8 @@ const messages = {
 		videos: {
 			title: 'Videos',
 			subtitle: 'Watch some of our favorites',
-			viewOnTikTok: 'View on TikTok'
+			viewOnTikTok: 'View on TikTok',
+			clickToLoad: 'Click to load videos'
 		}
 	}
 } as const
