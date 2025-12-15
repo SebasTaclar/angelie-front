@@ -125,6 +125,7 @@ const currentYear = new Date().getFullYear()
 
 // Variables para animaciones
 let progressInterval: ReturnType<typeof setInterval> | null = null
+let gearIntervals: Array<ReturnType<typeof setInterval>> = []
 
 // Simular progreso del mantenimiento
 const startProgressAnimation = () => {
@@ -160,7 +161,8 @@ const startGearAnimation = () => {
       element.style.transform = `rotate(${rotation}deg)`
     }
 
-    setInterval(rotateGear, 100)
+    const intervalId = setInterval(rotateGear, 100)
+    gearIntervals.push(intervalId)
   })
 }
 
@@ -177,6 +179,11 @@ onUnmounted(() => {
   if (progressInterval) {
     clearInterval(progressInterval)
     progressInterval = null
+  }
+
+  if (gearIntervals.length) {
+    gearIntervals.forEach((id) => clearInterval(id))
+    gearIntervals = []
   }
 })
 </script>

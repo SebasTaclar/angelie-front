@@ -15,6 +15,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins,
+    // En producción: elimina console.* y debugger del bundle.
+    // (En dev se mantienen para depuración.)
+    esbuild: mode === 'production' ? { drop: ['console', 'debugger'] } : undefined,
     server: {
       port: 5173,
       strictPort: true,
