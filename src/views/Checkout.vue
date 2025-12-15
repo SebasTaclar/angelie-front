@@ -283,6 +283,7 @@ import { paymentService } from '@/services/api/paymentService'
 import type { CreateProductPaymentRequest } from '@/services/api/paymentService'
 import { useI18n } from 'vue-i18n'
 import { SOCIALS } from '@/config/brand'
+import { devError, devLog } from '@/utils/logger'
 
 defineOptions({
   name: 'CheckoutView'
@@ -329,22 +330,22 @@ watch(
 // Función para verificar si el usuario ya aceptó los términos
 const checkTermsAcceptance = () => {
   const termsAccepted = sessionStorage.getItem('termsAccepted')
-  console.log('🔍 Verificando términos aceptados en sessionStorage:', termsAccepted)
+  devLog('🔍 Verificando términos aceptados en sessionStorage:', termsAccepted)
   if (termsAccepted === 'true') {
     formData.value.acceptTerms = true
-    console.log('✅ Términos marcados automáticamente')
+    devLog('✅ Términos marcados automáticamente')
   }
 }
 
 // Listener para cuando la ventana recupera el foco (usuario vuelve de otra pestaña)
 const handleWindowFocus = () => {
-  console.log('👀 Ventana recuperó el foco, verificando términos...')
+  devLog('👀 Ventana recuperó el foco, verificando términos...')
   checkTermsAcceptance()
 }
 
 // Verificar al montar el componente
 onMounted(() => {
-  console.log('🏁 Componente Checkout montado')
+  devLog('🏁 Componente Checkout montado')
   checkTermsAcceptance()
 
   // Agregar listener para cuando vuelve el foco a la ventana
@@ -408,14 +409,14 @@ const clearError = (field: string) => {
 }
 
 const confirmOrder = async () => {
-  console.log('🔵 Iniciando confirmOrder...')
+  devLog('🔵 Iniciando confirmOrder...')
 
   if (!validateForm()) {
-    console.log('❌ Validación fallida')
+    devLog('❌ Validación fallida')
     return
   }
 
-  console.log('✅ Validación exitosa')
+  devLog('✅ Validación exitosa')
   isProcessing.value = true
 
   // Limpiar errores previos
@@ -433,7 +434,7 @@ const confirmOrder = async () => {
 
       // Validar que el ID sea un número válido
       if (isNaN(productId)) {
-        console.error('❌ ID de producto inválido:', item.id)
+        devError('❌ ID de producto inválido:', item.id)
         throw new Error(`ID de producto inválido: ${item.id}`)
       }
 
@@ -454,8 +455,8 @@ const confirmOrder = async () => {
       return cartItem
     })
 
-    console.log('📦 Items preparados:', items)
-    console.log('📦 CartItems originales:', cartItems.value)
+    devLog('📦 Items preparados:', items)
+    devLog('📦 CartItems originales:', cartItems.value)
 
     // Preparar el request para el backend
     const paymentRequest: CreateProductPaymentRequest = {
@@ -471,21 +472,21 @@ const confirmOrder = async () => {
       paymentRequest.shippingAddress = `${formData.value.address}, ${formData.value.city}`
     }
 
-    console.log('📤 Enviando request de pago:', paymentRequest)
+    devLog('📤 Enviando request de pago:', paymentRequest)
 
     // Llamar al backend para crear el pago
     const response = await paymentService.createProductPayment(paymentRequest)
 
-    console.log('📥 Respuesta completa del backend:', response)
-    console.log('📥 response.success:', response.success)
-    console.log('📥 response.data:', response.data)
+    devLog('📥 Respuesta completa del backend:', response)
+    devLog('📥 response.success:', response.success)
+    devLog('📥 response.data:', response.data)
 
     if (response.success && response.data) {
       // Redirigir a la URL de pago de Wompi
       const paymentUrl = response.data.payment.paymentUrl
-      console.log('💳 URL de pago obtenida:', paymentUrl)
-      console.log('💳 Tipo de paymentUrl:', typeof paymentUrl)
-      console.log('💳 paymentUrl válida:', !!paymentUrl)
+      devLog('💳 URL de pago obtenida:', paymentUrl)
+      devLog('💳 Tipo de paymentUrl:', typeof paymentUrl)
+      devLog('💳 paymentUrl válida:', !!paymentUrl)
 
       if (!paymentUrl) {
         throw new Error('No se recibió URL de pago del servidor')
@@ -493,40 +494,40 @@ const confirmOrder = async () => {
 
       // Guardar info de la compra antes de redirigir
       sessionStorage.setItem('pendingPurchaseId', response.data.purchase.id.toString())
-      console.log('💾 Purchase ID guardado:', response.data.purchase.id)
+      devLog('💾 Purchase ID guardado:', response.data.purchase.id)
 
       // Limpiar carrito
       clearCart()
-      console.log('🗑️ Carrito limpiado')
+      devLog('🗑️ Carrito limpiado')
 
       // Redirigir a Wompi
-      console.log('🚀 Redirigiendo a:', paymentUrl)
+      devLog('🚀 Redirigiendo a:', paymentUrl)
       window.location.href = paymentUrl
     } else {
-      console.error('❌ Response no exitoso:', response)
+      devError('❌ Response no exitoso:', response)
       throw new Error(response.message || 'Error al crear el pago')
     }
   } catch (error: unknown) {
-    console.error('❌ Error capturado en catch:', error)
-    console.error('❌ Tipo de error:', typeof error)
-    console.error('❌ Error completo:', JSON.stringify(error, null, 2))
+    devError('❌ Error capturado en catch:', error)
+    devError('❌ Tipo de error:', typeof error)
+    devError('❌ Error completo:', JSON.stringify(error, null, 2))
 
     // Mostrar error al usuario
     let errorMessage = 'Hubo un problema al procesar tu pago. '
 
     if (error instanceof Error) {
       errorMessage = error.message
-      console.error('❌ Error message:', error.message)
-      console.error('❌ Error stack:', error.stack)
+      devError('❌ Error message:', error.message)
+      devError('❌ Error stack:', error.stack)
     }
 
     // Si es un error de axios/fetch
     if (typeof error === 'object' && error !== null) {
       const err = error as Record<string, unknown>
       if (err.response) {
-        console.error('❌ Error response:', err.response)
+        devError('❌ Error response:', err.response)
         const response = err.response as Record<string, unknown>
-        console.error('❌ Error response.data:', response.data)
+        devError('❌ Error response.data:', response.data)
 
         if (response.data && typeof response.data === 'object') {
           const data = response.data as Record<string, unknown>
@@ -545,7 +546,7 @@ const confirmOrder = async () => {
     }
 
     errors.value.general = errorMessage
-    console.error('❌ Error mostrado al usuario:', errorMessage)
+    devError('❌ Error mostrado al usuario:', errorMessage)
 
     isProcessing.value = false
   }
