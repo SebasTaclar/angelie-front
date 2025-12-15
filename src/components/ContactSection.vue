@@ -92,7 +92,7 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 
 const mapHostEl = ref<HTMLElement | null>(null)
 const shouldLoadMap = ref(false)
-let observer: IntersectionObserver | null = null
+let onDomReady: (() => void) | null = null
 
 onMounted(() => {
   if (typeof window === 'undefined') return
@@ -100,30 +100,36 @@ onMounted(() => {
 
   const load = () => {
     shouldLoadMap.value = true
-    observer?.disconnect()
-    observer = null
   }
 
-  if ('IntersectionObserver' in window && mapHostEl.value) {
-    observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          load()
-        }
-      },
-      { root: null, rootMargin: '200px', threshold: 0.01 },
-    )
-    observer.observe(mapHostEl.value)
+  const schedule = () => {
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void
+    }
+
+    // Carga pronto, pero evitando bloquear el render inicial.
+    if (typeof w.requestIdleCallback === 'function') {
+      w.requestIdleCallback(load, { timeout: 1500 })
+    } else {
+      window.setTimeout(load, 0)
+    }
+  }
+
+  // Más rápido que esperar window.load.
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    schedule()
     return
   }
 
-  // Fallback: cargar pronto si no hay soporte de IO.
-  window.setTimeout(load, 0)
+  onDomReady = () => schedule()
+  window.addEventListener('DOMContentLoaded', onDomReady, { once: true })
 })
 
 onBeforeUnmount(() => {
-  observer?.disconnect()
-  observer = null
+  if (onDomReady) {
+    window.removeEventListener('DOMContentLoaded', onDomReady)
+    onDomReady = null
+  }
 })
 </script>
 

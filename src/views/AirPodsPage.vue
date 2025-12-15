@@ -11,19 +11,19 @@
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="lt100" v-model="selectedPriceRange" />
-            <span>Menos de $100.000</span>
+            <span>Menos de $100.000 COP</span>
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="100-300" v-model="selectedPriceRange" />
-            <span>$100.000 - $300.000</span>
+            <span>$100.000 - $300.000 COP</span>
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="300-500" v-model="selectedPriceRange" />
-            <span>$300.000 - $500.000</span>
+            <span>$300.000 - $500.000 COP</span>
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="gt500" v-model="selectedPriceRange" />
-            <span>Más de $500.000</span>
+            <span>Más de $500.000 COP</span>
           </label>
         </div>
 
@@ -88,6 +88,18 @@
           >
             <div class="image-wrap">
               <img :src="product.images[0]" :alt="product.name" loading="lazy" decoding="async" />
+              <!-- Badge de descuento -->
+              <div v-if="hasRealDiscount(product)" class="discount-badge-image">
+                -{{ Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100) }}%
+              </div>
+              <!-- Overlay de no disponible -->
+              <div v-if="product.status !== 'available'" class="out-of-stock-overlay">
+                <span>{{ getStatusText(product.status) }}</span>
+              </div>
+              <!-- Badge de estado en esquina inferior izquierda -->
+              <span :class="['product-status-badge', getStatusClass(product.status)]">
+                {{ getStatusText(product.status) }}
+              </span>
             </div>
 
             <div class="card-body">
@@ -95,10 +107,15 @@
                 {{ isGlobalSearch ? (hasRealDiscount(product) ? 'OFERTA' : categoryNameById(product.category)) : 'OFERTA' }}
               </div>
               <h3 class="name">{{ product.name }}</h3>
-              <div class="price">${{ product.price.toLocaleString() }}</div>
-              <div v-if="hasRealDiscount(product)" class="original-price">${{ product.originalPrice!.toLocaleString() }}</div>
+              <div class="price">${{ product.price.toLocaleString() }} COP</div>
+              <div v-if="hasRealDiscount(product)" class="original-price">${{ product.originalPrice!.toLocaleString() }} COP</div>
 
-              <button class="add" type="button" @click.stop="addProductToCart(product)">
+              <button 
+                v-if="product.status === 'available'"
+                class="add" 
+                type="button" 
+                @click.stop="addProductToCart(product)"
+              >
                 <span class="cart">🛒</span>
                 Agregar
               </button>
@@ -245,6 +262,32 @@ function hasRealDiscount(p: Product): boolean {
   return typeof p.originalPrice === 'number' && p.originalPrice > 0 && p.originalPrice > p.price
 }
 
+function getStatusText(status: string): string {
+  switch (status) {
+    case 'available':
+      return 'Disponible'
+    case 'coming-soon':
+      return 'Próximamente'
+    case 'out-of-stock':
+      return 'Agotado'
+    default:
+      return 'No disponible'
+  }
+}
+
+function getStatusClass(status: string): string {
+  switch (status) {
+    case 'available':
+      return 'status-available'
+    case 'coming-soon':
+      return 'status-coming-soon'
+    case 'out-of-stock':
+      return 'status-out-of-stock'
+    default:
+      return 'status-unavailable'
+  }
+}
+
 function clearFilters() {
   searchTerm.value = ''
   selectedPriceRange.value = 'all'
@@ -253,6 +296,14 @@ function clearFilters() {
 
 function addProductToCart(p: Product) {
   const categoryName = categories.value.find(cat => cat.id === p.category)?.name || 'Ofertas'
+  
+  // Construir características del producto
+  const characteristics: string[] = []
+  if (p.colors && p.colors.length > 0) {
+    // Agregar todos los colores disponibles
+    characteristics.push(...p.colors)
+  }
+  
   addToCart({
     id: p.id,
     name: p.name,
@@ -262,7 +313,7 @@ function addProductToCart(p: Product) {
     description: p.description,
     inStock: p.status === 'available',
     originalPrice: p.originalPrice
-  })
+  }, 1, p.colors?.[0], characteristics)
 }
 
 onMounted(async () => {
@@ -522,6 +573,7 @@ onMounted(async () => {
   width: 100%;
   aspect-ratio: 4 / 3;
   background: rgba(15, 23, 42, 0.04);
+  position: relative;
 }
 
 .image-wrap img {
@@ -529,6 +581,71 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Badge de descuento en la imagen */
+.discount-badge-image {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  z-index: 2;
+}
+
+/* Overlay de no disponible */
+.out-of-stock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  z-index: 3;
+}
+
+/* Badge de estado en esquina inferior izquierda */
+.product-status-badge {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.product-status-badge.status-available {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.product-status-badge.status-coming-soon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.product-status-badge.status-out-of-stock {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.product-status-badge.status-unavailable {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
 }
 
 .card-body {

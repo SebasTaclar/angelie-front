@@ -27,7 +27,7 @@ const messages = {
 			tagline: 'Donde cada pieza cuenta una historia de elegancia y distinción',
 			explore: 'EXPLORAR COLECCIÓN',
 			learnMore: 'CONOCER MÁS',
-			scrollDown: 'Desliza hacia abajo',
+			scrollDown: 'Desliza',
 			logoAlt: 'Angelie Joyería'
 		},
 		visit: {
@@ -237,7 +237,7 @@ const messages = {
 			tagline: 'Where every piece tells a story of elegance and distinction',
 			explore: 'EXPLORE COLLECTION',
 			learnMore: 'LEARN MORE',
-			scrollDown: 'Scroll down',
+			scrollDown: 'Scroll',
 			logoAlt: 'Angelie Jewelry'
 		},
 		visit: {

@@ -52,13 +52,20 @@
       </div>
 
       <!-- Línea decorativa -->
-      <div class="decorative-line"></div>
+
     </div>
 
     <!-- Indicador de scroll -->
-    <div class="scroll-indicator">
-      <div class="scroll-dot"></div>
+    <div
+      class="scroll-indicator"
+      role="button"
+      tabindex="0"
+      @click="scrollDownIndicator"
+      @keydown.enter.prevent="scrollDownIndicator"
+      @keydown.space.prevent="scrollDownIndicator"
+    >
       <p>{{ $t('banner.scrollDown') }}</p>
+      <div class="scroll-arrow" aria-hidden="true"></div>
     </div>
   </section>
 </template>
@@ -79,6 +86,21 @@ const toggleInfo = () => {
   if (categoriesSection) {
     categoriesSection.scrollIntoView({ behavior: 'smooth' })
   }
+}
+
+const scrollDownIndicator = () => {
+  const target =
+    document.querySelector('#categories') ||
+    document.querySelector('.categories-section') ||
+    document.querySelector('#products') ||
+    document.querySelector('.product-store')
+
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth' })
+    return
+  }
+
+  window.scrollBy({ top: window.innerHeight * 0.9, behavior: 'smooth' })
 }
 
 defineOptions({
@@ -634,7 +656,7 @@ defineOptions({
 /* Indicador de scroll */
 .scroll-indicator {
   position: absolute;
-  bottom: 30px;
+  bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -643,21 +665,53 @@ defineOptions({
   gap: 0.5rem;
   animation: slide-up 1s ease-out 1s both;
   z-index: 10;
+  cursor: pointer;
+  user-select: none;
 }
 
-.scroll-dot {
-  width: 8px;
-  height: 8px;
-  background: rgb(201, 168, 89);
-  border-radius: 50%;
-  animation: bounce-down 2s ease-in-out infinite;
+.scroll-indicator:focus-visible {
+  outline: 2px solid rgba(201, 168, 89, 0.5);
+  outline-offset: 6px;
+  border-radius: 10px;
 }
 
 .scroll-indicator p {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
   margin: 0;
+}
+
+.scroll-arrow {
+  width: 26px;
+  height: 14px;
+  position: relative;
+  animation: bounce-down 2s ease-in-out infinite;
+}
+
+.scroll-arrow::before,
+.scroll-arrow::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  width: 14px;
+  height: 2px;
+  background: rgb(201, 168, 89);
+  opacity: 0.95;
+}
+
+.scroll-arrow::before {
+  left: 0;
+  transform: rotate(45deg);
+  transform-origin: left center;
+}
+
+.scroll-arrow::after {
+  right: 0;
+  transform: rotate(-45deg);
+  transform-origin: right center;
 }
 
 /* Responsive */
@@ -790,16 +844,22 @@ defineOptions({
     width: 100px;
   }
 
-  /* Indicador inferior estilo "diamante" sin texto */
-  .scroll-indicator p {
-    display: none;
+  /* En celular: indicador debajo de los botones (en flujo normal) */
+  .scroll-indicator {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    margin-top: 0.85rem;
+    padding-bottom: env(safe-area-inset-bottom);
+    gap: 0.35rem;
   }
 
-  .scroll-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-    transform: rotate(45deg);
+  .scroll-arrow {
+    width: 30px;
+    height: 16px;
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <section ref="sectionEl" class="videos-section">
+  <section class="videos-section">
     <div class="container">
       <header class="header">
         <h2 class="title">{{ t('videos.title') }}</h2>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 type TikTokVideo = { id: string; url: string }
@@ -46,10 +46,8 @@ const videos: TikTokVideo[] = [
 ]
 
 const { t } = useI18n()
-
-const sectionEl = ref<HTMLElement | null>(null)
-let observer: IntersectionObserver | null = null
 let didLoadTikTok = false
+let onDomReady: (() => void) | null = null
 
 function ensureTikTokScriptLoaded(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -88,29 +86,34 @@ onMounted(async () => {
     }
   }
 
-  // Cargar solo cuando el bloque entra al viewport (evita bloquear el render inicial).
-  if ('IntersectionObserver' in window && sectionEl.value) {
-    observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          observer?.disconnect()
-          observer = null
-          void loadOnce()
-        }
-      },
-      { root: null, rootMargin: '200px', threshold: 0.01 },
-    )
-    observer.observe(sectionEl.value)
+  const schedule = () => {
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void
+    }
+
+    // Inicia lo antes posible sin bloquear el render inicial.
+    if (typeof w.requestIdleCallback === 'function') {
+      w.requestIdleCallback(() => void loadOnce(), { timeout: 1500 })
+    } else {
+      window.setTimeout(() => void loadOnce(), 0)
+    }
+  }
+
+  // "Página cargada" (DOM listo) suele ser suficiente y es más rápido que esperar window.load.
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    schedule()
     return
   }
 
-  // Fallback: cargar en idle-ish.
-  window.setTimeout(() => void loadOnce(), 0)
+  onDomReady = () => schedule()
+  window.addEventListener('DOMContentLoaded', onDomReady, { once: true })
 })
 
 onBeforeUnmount(() => {
-  observer?.disconnect()
-  observer = null
+  if (onDomReady) {
+    window.removeEventListener('DOMContentLoaded', onDomReady)
+    onDomReady = null
+  }
 })
 </script>
 

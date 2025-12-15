@@ -8,6 +8,7 @@ export interface CartItem {
   quantity: number
   category: string
   selectedColor?: string
+  characteristics?: string[] // Array de características del producto
 }
 
 export interface Product {
@@ -62,7 +63,7 @@ export function useCart() {
   })
 
   // Agregar producto al carrito
-  const addToCart = (product: Product, quantity: number = 1, selectedColor?: string) => {
+  const addToCart = (product: Product, quantity: number = 1, selectedColor?: string, characteristics?: string[]) => {
     const existingItem = cartItems.value.find(item =>
       item.id === product.id && item.selectedColor === selectedColor
     )
@@ -77,7 +78,8 @@ export function useCart() {
         image: product.image,
         quantity,
         category: product.category,
-        selectedColor
+        selectedColor,
+        characteristics
       })
     }
   }
