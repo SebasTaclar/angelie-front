@@ -11,19 +11,19 @@
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="lt100" v-model="selectedPriceRange" />
-            <span>Menos de $100.000</span>
+            <span>Menos de $100.000 COP</span>
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="100-300" v-model="selectedPriceRange" />
-            <span>$100.000 - $300.000</span>
+            <span>$100.000 - $300.000 COP</span>
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="300-500" v-model="selectedPriceRange" />
-            <span>$300.000 - $500.000</span>
+            <span>$300.000 - $500.000 COP</span>
           </label>
           <label class="radio-item">
             <input type="radio" name="price" value="gt500" v-model="selectedPriceRange" />
-            <span>Más de $500.000</span>
+            <span>Más de $500.000 COP</span>
           </label>
         </div>
 
@@ -89,14 +89,30 @@
           >
             <div class="image-wrap">
               <img :src="p.images[0]" :alt="p.name" loading="lazy" decoding="async" />
+              <div v-if="p.originalPrice" class="discount-badge-image">
+                -{{ Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) }}%
+              </div>
+              <span :class="['product-status-badge', getStatusClass(p.status)]">
+                {{ getStatusText(p.status) }}
+              </span>
             </div>
 
             <div class="card-body">
               <div class="category-label">{{ categoryName(p.category) }}</div>
               <h3 class="name">{{ p.name }}</h3>
-              <div class="price">${{ p.price.toLocaleString() }}</div>
+              <div class="price-section">
+                <div class="price">${{ p.price.toLocaleString() }} COP</div>
+                <div v-if="p.originalPrice" class="original-price">
+                  ${{ p.originalPrice.toLocaleString() }} COP
+                </div>
+              </div>
 
-              <button class="add" type="button" @click.stop="addProductToCart(p)">
+              <button 
+                v-if="p.status === 'available'" 
+                class="add" 
+                type="button" 
+                @click.stop="addProductToCart(p)"
+              >
                 <span class="cart">🛒</span>
                 Agregar
               </button>
@@ -261,6 +277,13 @@ const filteredProducts = computed(() => {
 })
 
 function addProductToCart(p: Product) {
+  // Construir características del producto
+  const characteristics: string[] = []
+  if (p.colors && p.colors.length > 0) {
+    // Agregar todos los colores disponibles
+    characteristics.push(...p.colors)
+  }
+
   addToCart({
     id: p.id,
     name: p.name,
@@ -270,11 +293,37 @@ function addProductToCart(p: Product) {
     description: p.description,
     inStock: p.status === 'available',
     originalPrice: p.originalPrice
-  })
+  }, 1, p.colors?.[0], characteristics)
 }
 
 function openQuickView(p: Product) {
   quickView.open(p)
+}
+
+function getStatusText(status: string) {
+  switch (status) {
+    case 'available':
+      return 'Disponible'
+    case 'coming-soon':
+      return 'Próximamente'
+    case 'out-of-stock':
+      return 'Agotado'
+    default:
+      return 'No disponible'
+  }
+}
+
+function getStatusClass(status: string) {
+  switch (status) {
+    case 'available':
+      return 'status-available'
+    case 'coming-soon':
+      return 'status-coming-soon'
+    case 'out-of-stock':
+      return 'status-out-of-stock'
+    default:
+      return 'status-unavailable'
+  }
 }
 
 function clearFilters() {
@@ -538,6 +587,7 @@ onMounted(async () => {
   width: 100%;
   aspect-ratio: 4 / 3;
   background: rgba(15, 23, 42, 0.04);
+  position: relative;
 }
 
 .image-wrap img {
@@ -545,6 +595,58 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.discount-badge-image {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  z-index: 2;
+}
+
+.product-status-badge {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.product-status-badge.status-available {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.product-status-badge.status-out-of-stock {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.product-status-badge.status-coming-soon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.product-status-badge.status-unavailable {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
 }
 
 .card-body {
@@ -566,10 +668,23 @@ onMounted(async () => {
   color: rgba(15, 23, 42, 0.9);
 }
 
-.price {
+.price-section {
   margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.price {
   font-weight: 900;
   color: rgba(215, 172, 67, 0.95);
+}
+
+.original-price {
+  font-size: 0.9rem;
+  text-decoration: line-through;
+  color: rgba(15, 23, 42, 0.45);
+  font-weight: 600;
 }
 
 .add {

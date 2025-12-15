@@ -1,5 +1,5 @@
 <template>
-  <section ref="sectionEl" class="videos-section">
+  <section class="videos-section" ref="sectionRef">
     <div class="container">
       <header class="header">
         <h2 class="title">{{ t('videos.title') }}</h2>
@@ -8,7 +8,19 @@
 
       <div class="grid">
         <div class="video" v-for="v in videos" :key="v.id">
+          <!-- Placeholder hasta que el video sea visible -->
+          <div v-if="!shouldLoadVideos" class="video-placeholder" @click="loadVideosNow">
+            <div class="placeholder-content">
+              <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <p class="placeholder-text">{{ t('videos.clickToLoad') }}</p>
+            </div>
+          </div>
+          
+          <!-- Embed de TikTok (solo se carga cuando es necesario) -->
           <blockquote
+            v-else
             class="tiktok-embed"
             :cite="v.url"
             data-tiktok-embed-type="video"
@@ -25,10 +37,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 type TikTokVideo = { id: string; url: string }
+
+interface WindowWithTikTok extends Window {
+  TikTokEmbed?: {
+    init: () => void
+  }
+}
 
 const videos: TikTokVideo[] = [
   {
@@ -46,71 +64,106 @@ const videos: TikTokVideo[] = [
 ]
 
 const { t } = useI18n()
-
-const sectionEl = ref<HTMLElement | null>(null)
-let observer: IntersectionObserver | null = null
+const sectionRef = ref<HTMLElement | null>(null)
+const shouldLoadVideos = ref(false)
 let didLoadTikTok = false
+let observer: IntersectionObserver | null = null
 
+/**
+ * Carga el script de TikTok solo cuando sea necesario
+ */
 function ensureTikTokScriptLoaded(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>('script[src="https://www.tiktok.com/embed.js"]')
-    if (existing) {
-      // La librería ya está presente; re-ejecutar el parseo si está disponible.
-      const w = window as unknown as { tiktokEmbedLoad?: () => void }
-      if (typeof w.tiktokEmbedLoad === 'function') {
-        w.tiktokEmbedLoad()
+  return new Promise((resolve) => {
+    // Si ya cargamos el embed, reusar
+    const win = window as WindowWithTikTok
+    if (typeof window !== 'undefined' && win.TikTokEmbed) {
+      win.TikTokEmbed.init()
+      return resolve()
+    }
+
+    const existingScript = document.getElementById('tiktok-embed-script')
+    if (existingScript) {
+      existingScript.addEventListener('load', () => {
+        const win = window as WindowWithTikTok
+        if (win.TikTokEmbed) {
+          win.TikTokEmbed.init()
+        }
+        resolve()
+      })
+      if (existingScript.hasAttribute('data-loaded')) {
+        const win = window as WindowWithTikTok
+        if (win.TikTokEmbed) {
+          win.TikTokEmbed.init()
+        }
+        resolve()
       }
-      resolve()
       return
     }
 
+    // Crear el script
     const script = document.createElement('script')
     script.src = 'https://www.tiktok.com/embed.js'
     script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('No se pudo cargar el embed de TikTok'))
-    document.body.appendChild(script)
+    script.id = 'tiktok-embed-script'
+
+    script.addEventListener('load', () => {
+      script.setAttribute('data-loaded', 'true')
+      const win = window as WindowWithTikTok
+      if (win.TikTokEmbed) {
+        win.TikTokEmbed.init()
+      }
+      resolve()
+    })
+
+    document.head.appendChild(script)
   })
 }
 
-onMounted(async () => {
-  // Si no hay videos, no cargamos nada de TikTok.
-  if (videos.length === 0) return
-  if (typeof window === 'undefined') return
+/**
+ * Carga los videos inmediatamente cuando se hace click en el placeholder
+ */
+function loadVideosNow() {
+  if (didLoadTikTok) return
+  didLoadTikTok = true
+  shouldLoadVideos.value = true
+  
+  // Pequeño delay para que Vue renderice los elementos antes de inicializar TikTok
+  setTimeout(() => {
+    ensureTikTokScriptLoaded()
+  }, 50)
+}
 
-  const loadOnce = async () => {
-    if (didLoadTikTok) return
-    didLoadTikTok = true
-    try {
-      await ensureTikTokScriptLoaded()
-    } catch {
-      // Si TikTok bloquea la carga, igual dejamos los enlaces.
-    }
-  }
+/**
+ * Usa Intersection Observer para cargar videos cuando la sección sea visible
+ */
+onMounted(() => {
+  if (!sectionRef.value) return
 
-  // Cargar solo cuando el bloque entra al viewport (evita bloquear el render inicial).
-  if ('IntersectionObserver' in window && sectionEl.value) {
-    observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          observer?.disconnect()
-          observer = null
-          void loadOnce()
+  // Usar Intersection Observer para detectar cuando la sección es visible
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        // Si la sección es visible (al menos 20% en viewport) y no hemos cargado, cargar
+        if (entry.isIntersecting && !didLoadTikTok) {
+          loadVideosNow()
         }
-      },
-      { root: null, rootMargin: '200px', threshold: 0.01 },
-    )
-    observer.observe(sectionEl.value)
-    return
-  }
+      })
+    },
+    {
+      // Activar cuando al menos 20% de la sección sea visible
+      threshold: 0.2,
+      // Cargar un poco antes de que llegue a la vista
+      rootMargin: '50px'
+    }
+  )
 
-  // Fallback: cargar en idle-ish.
-  window.setTimeout(() => void loadOnce(), 0)
+  observer.observe(sectionRef.value)
 })
 
 onBeforeUnmount(() => {
-  observer?.disconnect()
-  observer = null
+  if (observer) {
+    observer.disconnect()
+  }
 })
 </script>
 
@@ -198,10 +251,77 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(215, 172, 67, 0.18);
   padding: 0.75rem;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tiktok-embed {
   max-width: 100% !important;
+}
+
+/* Placeholder para mostrar antes de cargar videos */
+.video-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 450px;
+  background: linear-gradient(135deg, rgba(26, 58, 82, 0.2) 0%, rgba(201, 168, 89, 0.1) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.video-placeholder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.video-placeholder:hover {
+  background: linear-gradient(135deg, rgba(26, 58, 82, 0.3) 0%, rgba(201, 168, 89, 0.15) 100%);
+  transform: scale(1.02);
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 1;
+}
+
+.play-icon {
+  width: 64px;
+  height: 64px;
+  color: rgba(201, 168, 89, 0.8);
+  filter: drop-shadow(0 4px 12px rgba(201, 168, 89, 0.3));
+  transition: all 0.3s ease;
+}
+
+.video-placeholder:hover .play-icon {
+  color: rgb(201, 168, 89);
+  transform: scale(1.1);
+}
+
+.placeholder-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
 }
 
 /* TikTok embed trae estilos propios; aquí solo aseguramos que no desborde */

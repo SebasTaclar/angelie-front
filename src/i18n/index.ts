@@ -27,7 +27,7 @@ const messages = {
 			tagline: 'Donde cada pieza cuenta una historia de elegancia y distinción',
 			explore: 'EXPLORAR COLECCIÓN',
 			learnMore: 'CONOCER MÁS',
-			scrollDown: 'Desliza hacia abajo',
+			scrollDown: 'Desliza',
 			logoAlt: 'Angelie Joyería'
 		},
 		visit: {
@@ -212,7 +212,8 @@ const messages = {
 		videos: {
 			title: 'Videos',
 			subtitle: 'Mira algunos de nuestros favoritos',
-			viewOnTikTok: 'Ver en TikTok'
+			viewOnTikTok: 'Ver en TikTok',
+			clickToLoad: 'Click para cargar videos'
 		}
 	},
 	en: {
@@ -237,7 +238,7 @@ const messages = {
 			tagline: 'Where every piece tells a story of elegance and distinction',
 			explore: 'EXPLORE COLLECTION',
 			learnMore: 'LEARN MORE',
-			scrollDown: 'Scroll down',
+			scrollDown: 'Scroll',
 			logoAlt: 'Angelie Jewelry'
 		},
 		visit: {
@@ -421,7 +422,8 @@ const messages = {
 		videos: {
 			title: 'Videos',
 			subtitle: 'Watch some of our favorites',
-			viewOnTikTok: 'View on TikTok'
+			viewOnTikTok: 'View on TikTok',
+			clickToLoad: 'Click to load videos'
 		}
 	}
 } as const

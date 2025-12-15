@@ -34,7 +34,7 @@
       <div class="stat-card">
         <div class="stat-icon">💰</div>
         <div class="stat-content">
-          <div class="stat-number">${{ totalValue.toLocaleString() }}</div>
+          <div class="stat-number">${{ totalValue.toLocaleString() }} COP</div>
           <div class="stat-label">Valor Total</div>
         </div>
       </div>
@@ -85,6 +85,55 @@
           </div>
         </div>
 
+        <!-- Filtros -->
+        <div class="filters-row">
+          <div class="filter-group">
+            <label class="filter-label">Categoría</label>
+
+            <!-- Desktop: select nativo -->
+            <select v-model="selectedCategoryFilter" class="filter-select native-select">
+              <option value="">Todas</option>
+              <option v-for="category in categories" :key="category.id" :value="category.id">
+                {{ category.name }}
+              </option>
+            </select>
+
+            <!-- Mobile: dropdown controlado (evita overflow del desplegable nativo) -->
+            <div ref="categoryDropdownRef" class="custom-select">
+              <button
+                type="button"
+                class="filter-select filter-select-btn"
+                @click.stop="toggleCategoryDropdown"
+                :aria-expanded="categoryDropdownOpen ? 'true' : 'false'"
+              >
+                <span class="filter-select-text">{{ selectedCategoryLabel }}</span>
+                <span class="filter-select-caret">▾</span>
+              </button>
+
+              <div v-if="categoryDropdownOpen" class="filter-dropdown" role="listbox">
+                <button
+                  type="button"
+                  class="filter-dropdown-item"
+                  :class="{ active: selectedCategoryFilter === '' }"
+                  @click="selectCategoryFilter('')"
+                >
+                  Todas
+                </button>
+                <button
+                  v-for="category in categories"
+                  :key="category.id"
+                  type="button"
+                  class="filter-dropdown-item"
+                  :class="{ active: selectedCategoryFilter === category.id }"
+                  @click="selectCategoryFilter(category.id)"
+                >
+                  {{ category.name }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Lista de productos -->
         <div class="products-grid">
           <div v-for="product in filteredProducts" :key="product.id" class="product-card">
@@ -96,12 +145,12 @@
               <h3>{{ product.name }}</h3>
               <p class="product-description">{{ product.description }}</p>
               <div class="product-meta">
-                <span class="price">${{ product.price.toLocaleString() }}</span>
+                <span class="price">${{ product.price.toLocaleString() }} COP</span>
                 <span :class="['status', product.status]">{{ getStatusText(product.status) }}</span>
               </div>
               <div class="product-actions">
-                <button class="btn btn-sm btn-secondary" @click="editProduct(product)">✏️ Editar</button>
-                <button class="btn btn-sm btn-danger" @click="deleteProductConfirm(product.id)">🗑️ Eliminar</button>
+                <button class="btn btn-sm btn-secondary btn-edit" @click="editProduct(product)">✏️ Editar</button>
+                <button class="btn btn-sm btn-danger btn-delete" @click="deleteProductConfirm(product.id)">🗑️ Eliminar</button>
               </div>
             </div>
           </div>
@@ -182,75 +231,6 @@
           <h3>No se encontraron resultados</h3>
           <p>No hay categorías que coincidan con "{{ searchCategories }}"</p>
           <button class="btn btn-secondary" @click="searchCategories = ''">
-            Limpiar búsqueda
-          </button>
-        </div>
-      </div>
-
-      <!-- Pestaña de Novedades (ProductShowcase) -->
-      <div v-if="activeTab === 'showcase'" class="content-section">
-        <div class="section-header">
-          <h2>Gestión de Novedades</h2>
-          <button class="btn btn-primary" @click="showShowcaseForm = true">
-            <span class="btn-icon">✨</span>
-            Nueva Novedad
-          </button>
-        </div>
-
-        <!-- Barra de búsqueda para novedades -->
-        <div class="search-bar">
-          <div class="search-input-wrapper">
-            <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <path fill="currentColor" d="M10 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm8.707 17.293-4.387-4.387a9 9 0 1 0-1.414 1.414l4.387 4.387a1 1 0 0 0 1.414-1.414z"/>
-            </svg>
-            <input
-              type="search"
-              v-model="searchShowcase"
-              placeholder="Buscar novedades por nombre..."
-              aria-label="Buscar novedades"
-              class="search-input"
-            />
-            <button v-if="searchShowcase" class="search-clear" @click.prevent="searchShowcase = ''" aria-label="Limpiar búsqueda">X</button>
-          </div>
-        </div>
-
-        <!-- Lista de productos showcase -->
-        <div class="showcase-grid">
-          <div v-for="product in filteredShowcase" :key="product.id" class="showcase-card">
-            <div class="showcase-image">
-              <img :src="product.image" :alt="product.name" />
-            </div>
-            <div class="showcase-info">
-              <h3>{{ product.name }}</h3>
-              <p class="showcase-description">{{ product.description }}</p>
-              <div class="showcase-meta">
-                <span class="showcase-category">{{ getCategoryById(product.category)?.name || 'Sin categoría' }}</span>
-                <span class="showcase-status available">
-                  Disponible
-                </span>
-              </div>
-            </div>
-            <div class="showcase-actions">
-              <button class="btn btn-sm btn-secondary" @click="editShowcaseProduct(product)">✏️</button>
-              <button class="btn btn-sm btn-danger" @click="deleteShowcaseConfirm(product.id)">🗑️</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Estado vacío o sin resultados -->
-        <div v-if="filteredShowcase.length === 0 && !searchShowcase" class="empty-state">
-          <div class="empty-icon">✨</div>
-          <h3>No hay novedades</h3>
-          <p>Agrega productos destacados para mostrar en la sección de novedades</p>
-          <button class="btn btn-primary" @click="showShowcaseForm = true">
-            Crear Primera Novedad
-          </button>
-        </div>
-        <div v-else-if="filteredShowcase.length === 0 && searchShowcase" class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <h3>No se encontraron resultados</h3>
-          <p>No hay novedades que coincidan con "{{ searchShowcase }}"</p>
-          <button class="btn btn-secondary" @click="searchShowcase = ''">
             Limpiar búsqueda
           </button>
         </div>
@@ -434,14 +414,27 @@
                 <label>Precio *</label>
                 <div class="price-input">
                   <span class="currency">$</span>
-                  <input v-model.number="productForm.price" type="number" class="form-input" step="1000" min="0" required placeholder="0" />
+                  <input
+                    :value="formatPriceInput(productForm.price)"
+                    @input="handlePriceInput($event, 'price')"
+                    type="text"
+                    class="form-input"
+                    required
+                    placeholder="0"
+                  />
                 </div>
               </div>
               <div class="form-group">
                 <label>Precio Original (descuento)</label>
                 <div class="price-input">
                   <span class="currency">$</span>
-                  <input v-model.number="productForm.originalPrice" type="number" class="form-input" step="1000" min="0" placeholder="0" />
+                  <input
+                    :value="formatPriceInput(productForm.originalPrice)"
+                    @input="handlePriceInput($event, 'originalPrice')"
+                    type="text"
+                    class="form-input"
+                    placeholder="0"
+                  />
                 </div>
               </div>
             </div>
@@ -466,120 +459,84 @@
               </div>
             </div>
 
-            <!-- Selector de Colores -->
+            <!-- Selector de Material -->
             <div class="form-group">
-              <label>Colores Disponibles</label>
-              <div class="colors-selector">
-                <div class="colors-grid">
-                  <div
-                    v-for="color in appleColors"
-                    :key="color.name"
-                    class="color-option"
-                    :class="{ selected: isColorSelected(color.name) }"
-                    @click="toggleProductColor(color.name)"
+              <label>Materiales Disponibles</label>
+              <div class="materials-selector">
+                <div class="materials-grid">
+                  <button
+                    v-for="material in materialOptions"
+                    :key="material"
+                    type="button"
+                    class="material-option"
+                    :class="{ selected: isMaterialSelected(material) }"
+                    @click="toggleProductMaterial(material)"
                   >
-                    <div class="color-circle" :style="{ background: color.hex }">
-                      <span v-if="isColorSelected(color.name)" class="check-icon">✓</span>
-                    </div>
-                    <span class="color-name">{{ color.name }}</span>
-                  </div>
+                    {{ material }}
+                  </button>
                 </div>
-                <div v-if="productForm.colors.length > 0" class="selected-colors">
+                <div v-if="productForm.colors.length > 0" class="selected-materials">
                   <span class="selected-label">Seleccionados: </span>
                   <span class="selected-list">{{ productForm.colors.join(', ') }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- Subida de imagen -->
+            <!-- Imágenes (URLs) -->
             <div class="form-group">
-              <label>Imagen del Producto *</label>
+              <label>Imágenes del Producto (URLs) *</label>
 
-              <!-- Tabs para elegir método de imagen -->
-              <div class="image-tabs">
-                <button
-                  type="button"
-                  class="tab-btn"
-                  :class="{ active: productImageUploadMethod === 'url' }"
-                  @click="productImageUploadMethod = 'url'"
-                >
-                  URL de Imagen
-                </button>
-                <button
-                  type="button"
-                  class="tab-btn"
-                  :class="{ active: productImageUploadMethod === 'file' }"
-                  @click="productImageUploadMethod = 'file'"
-                >
-                  Subir Archivo
-                </button>
-              </div>
-
-              <!-- Campo URL -->
-              <div v-if="productImageUploadMethod === 'url'" class="image-input-section">
-                <input
-                  :value="productForm.images[0] || ''"
-                  @input="(e) => { productForm.images = [(e.target as HTMLInputElement).value]; updateImagePreview(); }"
-                  type="url"
-                  class="form-input"
-                  required
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                />
-              </div>
-
-              <!-- Campo de archivo -->
-              <div v-if="productImageUploadMethod === 'file'" class="image-input-section">
-                <input
-                  ref="fileInput"
-                  type="file"
-                  class="file-input"
-                  accept="image/*"
-                  multiple
-                  @change="handleMultipleFileSelect"
-                />
-                <div class="file-upload-area" @click="fileInput?.click()">
-                  <div v-if="productForm.images.length === 0" class="upload-placeholder">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="9" cy="9" r="2"/>
-                      <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                    </svg>
-                    <p>Haz clic para seleccionar imágenes</p>
-                    <span>JPG, PNG, GIF hasta 5MB (máximo 5 imágenes)</span>
-                  </div>
-                  <div v-if="productForm.images.length > 0" class="images-preview-grid">
-                    <div
-                      v-for="(image, index) in productForm.images"
-                      :key="index"
-                      class="image-preview-item"
+              <div class="image-input-section">
+                <div class="image-urls">
+                  <div v-for="(_, index) in productForm.images" :key="index" class="image-url-row">
+                    <input
+                      :value="productForm.images[index]"
+                      @input="(e) => updateImageUrl(index, (e.target as HTMLInputElement).value)"
+                      type="text"
+                      class="form-input"
+                      placeholder="https://ejemplo.com/imagen.jpg"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      @click="removeSingleImage(index)"
+                      :disabled="productForm.images.length === 1"
+                      title="Eliminar"
                     >
-                      <img :src="image" :alt="`Preview ${index + 1}`" />
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div class="image-url-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" @click="addImageUrl">
+                    + Agregar otra URL
+                  </button>
+                </div>
+
+                <div v-if="productForm.images.some(i => i.trim())" class="images-preview-grid">
+                  <div
+                    v-for="(image, index) in productForm.images"
+                    :key="`${index}-${image}`"
+                    class="image-preview-item"
+                    v-show="image.trim()"
+                  >
+                    <img :src="image" :alt="`Preview ${index + 1}`" />
+
+                    <div class="image-actions">
                       <button
                         type="button"
-                        class="remove-single-image"
-                        @click.stop="removeSingleImage(index)"
+                        class="img-action-btn"
+                        :class="{ primary: index === 0 }"
+                        @click="setPrimaryImage(index)"
+                        :disabled="index === 0"
+                        :title="index === 0 ? 'Imagen principal' : 'Marcar como principal'"
                       >
-                        ✕
+                        {{ index === 0 ? 'Principal' : 'Hacer principal' }}
                       </button>
-                      <span class="image-index">{{ index + 1 }}</span>
-                      <div class="image-actions">
-                        <button
-                          type="button"
-                          class="img-action-btn"
-                          :disabled="index === 0"
-                          @click.stop="moveImageLeft(index)"
-                          title="Mover a la izquierda"
-                        >←</button>
-                        <button
-                          type="button"
-                          class="img-action-btn"
-                          :disabled="index === productForm.images.length - 1"
-                          @click.stop="moveImageRight(index)"
-                          title="Mover a la derecha"
-                        >→</button>
-                        <!-- Botón Portada removido temporalmente -->
-                      </div>
                     </div>
+
+                    <span class="image-index">{{ index + 1 }}</span>
                   </div>
                 </div>
               </div>
@@ -628,115 +585,12 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal de Novedad -->
-    <div v-if="showShowcaseForm" class="modal-overlay" @click="closeShowcaseForm">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h3>{{ editingShowcaseProduct ? 'Editar Novedad' : 'Nueva Novedad' }}</h3>
-          <button class="modal-close" @click="closeShowcaseForm">✕</button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="saveShowcaseProduct">
-            <div class="form-group">
-              <label>Nombre del Producto *</label>
-              <input v-model="showcaseForm.name" type="text" class="form-input" required />
-            </div>
-            <div class="form-group">
-              <label>Descripción *</label>
-              <textarea v-model="showcaseForm.description" class="form-input" rows="3" required></textarea>
-            </div>
-            <!-- Campo de precio oculto - siempre será 0 para novedades -->
-            <div class="form-group" style="display: none;">
-              <label>Precio</label>
-              <input v-model.number="showcaseForm.price" type="number" class="form-input" min="0" step="1000" />
-            </div>
-            <div class="form-group">
-              <label>Imagen del Producto *</label>
-
-              <!-- Tabs para elegir método de imagen -->
-              <div class="image-tabs">
-                <button
-                  type="button"
-                  class="tab-btn"
-                  :class="{ active: imageUploadMethod === 'url' }"
-                  @click="imageUploadMethod = 'url'"
-                >
-                  URL de Imagen
-                </button>
-                <button
-                  type="button"
-                  class="tab-btn"
-                  :class="{ active: imageUploadMethod === 'file' }"
-                  @click="imageUploadMethod = 'file'"
-                >
-                  Subir Archivo
-                </button>
-              </div>
-
-              <!-- Campo URL -->
-              <div v-if="imageUploadMethod === 'url'" class="image-input-section">
-                <input
-                  v-model="showcaseForm.image"
-                  type="url"
-                  class="form-input"
-                  required
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                />
-              </div>
-
-              <!-- Campo de archivo -->
-              <div v-if="imageUploadMethod === 'file'" class="image-input-section">
-                <input
-                  ref="showcaseFileInput"
-                  type="file"
-                  class="file-input"
-                  accept="image/*"
-                  @change="handleShowcaseFileSelect"
-                />
-                <div class="file-upload-area" @click="showcaseFileInput?.click()">
-                  <div v-if="!showcaseImagePreview" class="upload-placeholder">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="9" cy="9" r="2"/>
-                      <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                    </svg>
-                    <p>Haz clic para seleccionar una imagen</p>
-                    <span>JPG, PNG, GIF hasta 5MB</span>
-                  </div>
-                  <div v-if="showcaseImagePreview" class="image-preview">
-                    <img :src="showcaseImagePreview" alt="Preview" />
-                    <button type="button" class="remove-image" @click.stop="removeShowcaseImage">✕</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Categoría *</label>
-              <select v-model="showcaseForm.category" class="form-input" required>
-                <option value="">Seleccionar categoría</option>
-                <option v-for="category in categories" :key="category.id" :value="category.id">
-                  {{ category.name }}
-                </option>
-              </select>
-            </div>
-            <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="closeShowcaseForm">Cancelar</button>
-              <button type="submit" class="btn btn-primary" :disabled="isSavingShowcase || !showcaseFormValid">
-                <span v-if="isSavingShowcase">Guardando...</span>
-                <span v-else>{{ editingShowcaseProduct ? 'Actualizar' : 'Crear' }}</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useProducts, type ShowcaseProduct } from '@/composables/useProducts'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useProducts } from '@/composables/useProducts'
 import type { Product } from '@/types/ProductType'
 import type { Category, CreateCategoryRequest } from '@/types/CategoryType'
 import { paymentService } from '@/services/api/paymentService'
@@ -760,44 +614,38 @@ interface Sale {
 
 // Estado reactivo (persistente)
 const ACTIVE_TAB_KEY = 'admin_active_tab'
-const activeTab = ref<string>(localStorage.getItem(ACTIVE_TAB_KEY) || 'products')
+const getInitialTab = () => {
+  try {
+    const saved = localStorage.getItem(ACTIVE_TAB_KEY)
+    const allowed = ['products', 'categories', 'sales']
+    return saved && allowed.includes(saved) ? saved : 'products'
+  } catch {
+    return 'products'
+  }
+}
+
+const activeTab = ref<string>(getInitialTab())
 const showProductForm = ref(false)
 const showCategoryForm = ref(false)
-const showShowcaseForm = ref(false)
 const editingProduct = ref<Product | null>(null)
 const editingCategory = ref<Category | null>(null)
-const editingShowcaseProduct = ref<ShowcaseProduct | null>(null)
-const imagePreview = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
-
-// Variables para product image upload
-const productImageUploadMethod = ref('url')
-
-// Variables para showcase image upload
-const imageUploadMethod = ref('url')
-const showcaseImagePreview = ref('')
-const showcaseFileInput = ref<HTMLInputElement | null>(null)
 
 // Variables para búsqueda
 const searchProducts = ref('')
 const searchCategories = ref('')
-const searchShowcase = ref('')
 const searchSales = ref('')
+
+// Filtros (Productos)
+const selectedCategoryFilter = ref('')
 
 // Usar el composable de productos
 const {
   regularProducts, // Productos regulares (sin showcase) - para mostrar en sección Productos
-  showcaseProducts,
   categories,
   availableProducts,
   addProduct,
   updateProduct,
   deleteProduct,
-  loadShowcaseProducts,
-  addShowcaseProduct,
-  updateShowcaseProduct,
-  deleteShowcaseProduct,
-  getCategoryById,
   loadCategories,
   loadProducts,
   addCategory,
@@ -808,16 +656,55 @@ const {
 // Alias para compatibilidad: usar regularProducts en la vista de productos
 const products = regularProducts
 
+// Dropdown móvil para filtro de categoría (evita overflow del select nativo)
+const categoryDropdownOpen = ref(false)
+const categoryDropdownRef = ref<HTMLElement | null>(null)
+
+const selectedCategoryLabel = computed(() => {
+  const selectedId = selectedCategoryFilter.value
+  if (!selectedId) return 'Todas'
+  const found = categories.value.find(c => c.id === selectedId)
+  return found?.name || 'Todas'
+})
+
+const toggleCategoryDropdown = () => {
+  categoryDropdownOpen.value = !categoryDropdownOpen.value
+}
+
+const closeCategoryDropdown = () => {
+  categoryDropdownOpen.value = false
+}
+
+const selectCategoryFilter = (categoryId: string) => {
+  selectedCategoryFilter.value = categoryId
+  closeCategoryDropdown()
+}
+
+const onCategoryDropdownDocumentClick = (event: MouseEvent) => {
+  if (!categoryDropdownOpen.value) return
+  const target = event.target as Node | null
+  const root = categoryDropdownRef.value
+  if (!target || !root) {
+    closeCategoryDropdown()
+    return
+  }
+  if (!root.contains(target)) closeCategoryDropdown()
+}
+
 // Cargar categorías y productos desde el backend al montar el componente
 onMounted(async () => {
   console.log('🔄 Cargando categorías y productos al montar el componente...')
   await loadCategories()
   await loadProducts()
-  await loadShowcaseProducts()
   await loadPurchases()
   console.log('✅ Categorías cargadas:', categories.value)
   console.log('✅ Productos cargados:', products.value)
-  console.log('✅ Productos showcase cargados:', showcaseProducts.value)
+
+  document.addEventListener('click', onCategoryDropdownDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onCategoryDropdownDocumentClick)
 })
 
 // Watcher para debug: observar cambios en categorías
@@ -907,61 +794,24 @@ const productForm = ref({
   description: '',
   price: 0,
   originalPrice: 0,
-  images: [] as string[],
+  images: [''] as string[],
   category: '',
   status: 'available' as 'available' | 'out-of-stock' | 'coming-soon',
   colors: [] as string[]
 })
 
-// Colores de Apple predeterminados
-const appleColors = ref([
-  { name: 'Naranja Cósmico', hex: '#ff5e00' },
-  { name: 'Azul Profundo', hex: '#003d5c' },
-  { name: 'Plata', hex: '#c0c0c0' },
-  { name: 'Azul', hex: '#1976d2' },
-  { name: 'Negro', hex: '#000000' },
-  { name: 'Blanco', hex: '#ffffff' },
-  { name: 'Azul Neblina', hex: '#a8c7dd' },
-  { name: 'Dorado Claro', hex: '#f7e7a1' },
-  { name: 'Azul Cielo', hex: '#87ceeb' },
-  { name: 'Rosa', hex: '#ff69b4' },
-  { name: 'Amarillo', hex: '#ffeb3b' },
-  { name: 'Verde', hex: '#4caf50' },
-  { name: 'Púrpura', hex: '#9c27b0' },
-  { name: 'Oro', hex: '#ffd700' }
-])
+// Materiales disponibles (se guardan en productForm.colors por compatibilidad)
+const materialOptions = ['Esmeralda', 'Oro', 'Plata']
 
 const categoryForm = ref<CreateCategoryRequest>({
   name: '',
   description: ''
 })
 
-const showcaseForm = ref({
-  name: '',
-  description: '',
-  price: 0,
-  image: '',
-  category: ''
-})
-
-// Estado de guardado de showcase (evita clicks múltiples y sensación de "bloqueo")
-const isSavingShowcase = ref(false)
-
-// Validación rápida del formulario de novedad (precio no requerido - siempre será 0)
-const showcaseFormValid = computed(() => {
-  return (
-    showcaseForm.value.name.trim().length > 0 &&
-    showcaseForm.value.description.trim().length > 0 &&
-    showcaseForm.value.image.trim().length > 0 &&
-    showcaseForm.value.category.trim().length > 0
-  )
-})
-
 // Pestañas
 const tabs = [
   { id: 'products', name: 'Productos', icon: '📦' },
   { id: 'categories', name: 'Categorías', icon: '🏷️' },
-  { id: 'showcase', name: 'Novedades', icon: '✨' },
   { id: 'sales', name: 'Resumen de Compras', icon: '📊' }
 ]
 
@@ -993,11 +843,16 @@ const totalSalesCount = computed(() => sales.value.length)
 
 // Computed properties para búsqueda y filtrado
 const filteredProducts = computed(() => {
+  const selectedCategory = selectedCategoryFilter.value
+  const baseList = selectedCategory
+    ? products.value.filter(p => p.category === selectedCategory)
+    : products.value
+
   if (!searchProducts.value.trim()) {
-    return products.value
+    return baseList
   }
   const searchLower = searchProducts.value.toLowerCase().trim()
-  return products.value.filter(product =>
+  return baseList.filter(product =>
     product.name.toLowerCase().includes(searchLower) ||
     product.description?.toLowerCase().includes(searchLower)
   )
@@ -1011,17 +866,6 @@ const filteredCategories = computed(() => {
   return categories.value.filter(category =>
     category.name.toLowerCase().includes(searchLower) ||
     category.description?.toLowerCase().includes(searchLower)
-  )
-})
-
-const filteredShowcase = computed(() => {
-  if (!searchShowcase.value.trim()) {
-    return showcaseProducts.value
-  }
-  const searchLower = searchShowcase.value.toLowerCase().trim()
-  return showcaseProducts.value.filter(product =>
-    product.name.toLowerCase().includes(searchLower) ||
-    product.description?.toLowerCase().includes(searchLower)
   )
 })
 
@@ -1044,6 +888,7 @@ const filteredSales = computed(() => {
 // Helper para convertir nombres de colores a hex
 const getColorHex = (colorName: string): string => {
   const colorMap: Record<string, string> = {
+    'esmeralda': '#10b981',
     'naranja cósmico': '#ff5e00',
     'naranja cosmico': '#ff5e00',
     'azul profundo': '#003d5c',
@@ -1129,16 +974,8 @@ const editProduct = (product: Product) => {
     status: product.status,
     colors: product.colors ? [...product.colors] : []
   }
-  // Configurar preview con la primera imagen si existe
-  if (product.images && product.images.length > 0) {
-    if (product.images[0].startsWith('http')) {
-      productImageUploadMethod.value = 'url'
-    } else {
-      productImageUploadMethod.value = 'file'
-    }
-    imagePreview.value = product.images[0]
-  } else {
-    imagePreview.value = ''
+  if (!productForm.value.images || productForm.value.images.length === 0) {
+    productForm.value.images = ['']
   }
   showProductForm.value = true
 }
@@ -1175,239 +1012,41 @@ const handleDeleteCategory = async (id: string) => {
   }
 }
 
-// Funciones para showcase products
-const editShowcaseProduct = (product: ShowcaseProduct) => {
-  editingShowcaseProduct.value = product
-  showcaseForm.value = {
-    name: product.name,
-    description: product.description,
-    price: 5000, // Siempre 0 para novedades
-    image: product.image,
-    category: product.category
-  }
-  // Determinar el método de imagen basado en si es URL o base64
-  if (product.image.startsWith('http')) {
-    imageUploadMethod.value = 'url'
-    showcaseImagePreview.value = ''
-  } else {
-    imageUploadMethod.value = 'file'
-    showcaseImagePreview.value = product.image
-  }
-  imagePreview.value = product.image
-  showShowcaseForm.value = true
-}
-
-const deleteShowcaseConfirm = async (id: string) => {
-  if (confirm('¿Estás seguro de eliminar esta novedad?')) {
-    try {
-      await deleteShowcaseProduct(id)
-      console.log('✅ Producto showcase eliminado')
-    } catch (error) {
-      console.error('❌ Error eliminando producto showcase:', error)
-      alert('Error al eliminar la novedad')
-    }
-  }
-}
-
-const saveShowcaseProduct = async () => {
-  if (isSavingShowcase.value) return
-  if (!showcaseFormValid.value) {
-    alert('Por favor completa todos los campos requeridos de la novedad.')
-    return
-  }
-  try {
-    isSavingShowcase.value = true
-
-    // Asegurar que el precio siempre sea 0 para novedades
-    showcaseForm.value.price = 5000
-
-    // Validación extra de URL (si se usa modo URL)
-    if (imageUploadMethod.value === 'url' && showcaseForm.value.image.startsWith('http')) {
-      const testImg = new Image()
-      const loadPromise = new Promise<void>((resolve, reject) => {
-        testImg.onload = () => resolve()
-        testImg.onerror = () => reject(new Error('No se pudo cargar la imagen proporcionada.'))
-      })
-      testImg.src = showcaseForm.value.image
-      await Promise.race([
-        loadPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera al validar la imagen.')), 4000))
-      ])
-    }
-
-    if (editingShowcaseProduct.value) {
-      // Actualizar novedad existente - mostrar confirmación
-      const confirmMessage = `¿Estás seguro de que deseas actualizar la novedad "${editingShowcaseProduct.value.name}"?\n\nSe actualizarán todos los cambios realizados.`
-      if (!confirm(confirmMessage)) {
-        isSavingShowcase.value = false
-        return
-      }
-      await updateShowcaseProduct(editingShowcaseProduct.value.id, showcaseForm.value)
-      console.log('✅ Producto showcase actualizado')
-    } else {
-      await addShowcaseProduct(showcaseForm.value)
-      console.log('✅ Producto showcase agregado')
-    }
-    closeShowcaseForm()
-  } catch (e: unknown) {
-    console.error('❌ Error guardando producto showcase:', e)
-    const msg = typeof e === 'object' && e && 'message' in e ? (e as { message?: string }).message : undefined
-    alert(msg || 'Ocurrió un problema al guardar la novedad.')
-  } finally {
-    isSavingShowcase.value = false
-  }
-}
-
-const closeShowcaseForm = () => {
-  showShowcaseForm.value = false
-  editingShowcaseProduct.value = null
-  imagePreview.value = ''
-  showcaseImagePreview.value = ''
-  imageUploadMethod.value = 'url'
-  showcaseForm.value = {
-    name: '',
-    description: '',
-    price: 0,
-    image: '',
-    category: ''
-  }
-  // Limpiar input de archivo
-  if (showcaseFileInput.value) {
-    showcaseFileInput.value.value = ''
-  }
-}
-
 // Computed para validación de formulario
 const isFormValid = computed(() => {
+  const hasImage = productForm.value.images.some(i => i.trim().length > 0)
   return productForm.value.name.trim() !== '' &&
          productForm.value.price > 0 &&
-         productForm.value.category !== ''
+         productForm.value.category !== '' &&
+         hasImage
 })
 
-const handleMultipleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const files = target.files
-  if (files && files.length > 0) {
-    handleMultipleImageFiles(files)
-  }
+const addImageUrl = () => {
+  productForm.value.images.push('')
 }
 
-const handleMultipleImageFiles = (files: FileList) => {
-  const imagePromises: Promise<string>[] = []
-
-  for (let i = 0; i < Math.min(files.length, 5); i++) { // Máximo 5 imágenes
-    const file = files[i]
-
-    // Validar tamaño (5MB máximo)
-    if (file.size > 5 * 1024 * 1024) {
-      alert(`El archivo ${file.name} es demasiado grande. Máximo 5MB.`)
-      continue
-    }
-
-    // Validar tipo
-    if (!file.type.startsWith('image/')) {
-      alert(`${file.name} no es un archivo de imagen válido.`)
-      continue
-    }
-
-    // Crear promesa para leer el archivo
-    const promise = new Promise<string>((resolve) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        resolve(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-    })
-
-    imagePromises.push(promise)
-  }
-
-  // Procesar todas las imágenes
-  Promise.all(imagePromises).then((base64Images) => {
-    productForm.value.images = base64Images
-    imagePreview.value = base64Images[0] || ''
-  })
+const updateImageUrl = (index: number, value: string) => {
+  productForm.value.images[index] = value
 }
 
-
-const updateImagePreview = () => {
-  if (productForm.value.images.length > 0 && productForm.value.images[0].startsWith('http')) {
-    imagePreview.value = productForm.value.images[0]
-  } else {
-    imagePreview.value = ''
-  }
+const setPrimaryImage = (index: number) => {
+  if (index <= 0) return
+  const imgs = productForm.value.images
+  const selected = imgs[index]
+  imgs.splice(index, 1)
+  imgs.unshift(selected)
 }
 
 // removeImage eliminado (uso sustituido por removeSingleImage o reinicio manual)
 
 const removeSingleImage = (index: number) => {
   productForm.value.images.splice(index, 1)
-  if (productForm.value.images.length > 0) {
-    imagePreview.value = productForm.value.images[0]
-  } else {
-    imagePreview.value = ''
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
+  if (productForm.value.images.length === 0) {
+    productForm.value.images = ['']
   }
-}
-
-// Reordenar: mover a la izquierda
-const moveImageLeft = (index: number) => {
-  if (index <= 0) return
-  const imgs = productForm.value.images
-  ;[imgs[index - 1], imgs[index]] = [imgs[index], imgs[index - 1]]
-  imagePreview.value = imgs[0] || ''
-}
-
-// Reordenar: mover a la derecha
-const moveImageRight = (index: number) => {
-  const imgs = productForm.value.images
-  if (index >= imgs.length - 1) return
-  ;[imgs[index + 1], imgs[index]] = [imgs[index], imgs[index + 1]]
-  imagePreview.value = imgs[0] || ''
 }
 
 // setAsCover removido (no se usa actualmente)
-
-// Funciones específicas para showcase image upload
-const handleShowcaseFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (file) {
-    handleShowcaseImageFile(file)
-  }
-}
-
-const handleShowcaseImageFile = (file: File) => {
-  // Validar tamaño (5MB máximo)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('El archivo es demasiado grande. Máximo 5MB.')
-    return
-  }
-
-  // Validar tipo
-  if (!file.type.startsWith('image/')) {
-    alert('Solo se permiten archivos de imagen.')
-    return
-  }
-
-  // Crear URL temporal para vista previa
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    showcaseImagePreview.value = e.target?.result as string
-    showcaseForm.value.image = e.target?.result as string
-  }
-  reader.readAsDataURL(file)
-}
-
-const removeShowcaseImage = () => {
-  showcaseImagePreview.value = ''
-  showcaseForm.value.image = ''
-  if (showcaseFileInput.value) {
-    showcaseFileInput.value.value = ''
-  }
-}
 
 // Función auxiliar para normalizar strings (quitar tildes, espacios extra, etc.)
 const normalizeString = (str: string): string => {
@@ -1419,43 +1058,55 @@ const normalizeString = (str: string): string => {
     .replace(/\s+/g, ' ') // Normalizar espacios múltiples a uno solo
 }
 
-// Función para verificar si un color está seleccionado (comparación normalizada)
-const isColorSelected = (colorName: string) => {
-  const normalizedColorName = normalizeString(colorName)
+const isMaterialSelected = (material: string) => {
+  const normalizedMaterial = normalizeString(material)
   return productForm.value.colors.some(
-    c => normalizeString(c) === normalizedColorName
+    c => normalizeString(c) === normalizedMaterial
   )
 }
 
-// Función para manejar la selección de colores
-const toggleProductColor = (colorName: string) => {
-  const normalizedColorName = normalizeString(colorName)
-
-  // Buscar el índice comparando strings normalizados
+const toggleProductMaterial = (material: string) => {
+  const normalizedMaterial = normalizeString(material)
   const index = productForm.value.colors.findIndex(
-    c => normalizeString(c) === normalizedColorName
+    c => normalizeString(c) === normalizedMaterial
   )
 
   if (index > -1) {
-    // Si ya está seleccionado, lo removemos
     productForm.value.colors.splice(index, 1)
   } else {
-    // Si no está seleccionado, lo agregamos (usando el formato correcto del appleColors)
-    productForm.value.colors.push(colorName)
+    productForm.value.colors.push(material)
   }
 }
 
+// Formatear precio para mostrar con separadores de miles
+const formatPriceInput = (value: number): string => {
+  if (!value || value === 0) return ''
+  return value.toLocaleString('es-CO')
+}
+
+// Manejar input de precio y parsear el valor con separadores
+const handlePriceInput = (event: Event, field: 'price' | 'originalPrice') => {
+  const input = event.target as HTMLInputElement
+  const rawValue = input.value.replace(/\./g, '').replace(/[^\d]/g, '')
+  const numValue = rawValue ? parseInt(rawValue, 10) : 0
+  productForm.value[field] = numValue
+}
+
 const saveProduct = () => {
+  const payload = {
+    ...productForm.value,
+    images: productForm.value.images.map(i => i.trim()).filter(Boolean)
+  }
   if (editingProduct.value) {
     // Actualizar producto existente - mostrar confirmación
     const confirmMessage = `¿Estás seguro de que deseas actualizar el producto "${editingProduct.value.name}"?\n\nSe actualizarán todos los cambios realizados.`
     if (!confirm(confirmMessage)) {
       return
     }
-    updateProduct(editingProduct.value.id, productForm.value)
+    updateProduct(editingProduct.value.id, payload)
   } else {
     // Crear nuevo producto
-    addProduct(productForm.value)
+    addProduct(payload)
   }
   closeProductForm()
 }
@@ -1478,20 +1129,15 @@ const saveCategory = async () => {
 const closeProductForm = () => {
   showProductForm.value = false
   editingProduct.value = null
-  imagePreview.value = ''
-  productImageUploadMethod.value = 'url'
   productForm.value = {
     name: '',
     description: '',
     price: 0,
     originalPrice: 0,
-    images: [],
+    images: [''],
     category: '',
     status: 'available',
     colors: []
-  }
-  if (fileInput.value) {
-    fileInput.value.value = ''
   }
 }
 
@@ -1506,6 +1152,13 @@ const closeCategoryForm = () => {
 </script>
 
 <style scoped>
+.admin-dashboard,
+.admin-dashboard *,
+.admin-dashboard *::before,
+.admin-dashboard *::after {
+  box-sizing: border-box;
+}
+
 .admin-dashboard {
   /* Variables locales para look Angelie (oro/tinta) */
   --admin-ink: #071e25;
@@ -1513,6 +1166,11 @@ const closeCategoryForm = () => {
   --admin-gold-deep: rgb(215, 172, 67);
   --admin-gold-soft: rgba(201, 168, 89, 0.22);
   --admin-gold-soft-2: rgba(201, 168, 89, 0.32);
+
+  /* Acento esmeralda (para no dejar todo dorado) */
+  --admin-emerald: #10b981;
+  --admin-emerald-deep: #059669;
+  --admin-emerald-soft: rgba(16, 185, 129, 0.22);
 
   /* Override de la “marca” SOLO para el Admin (evita el rojo global SOYDANI) */
   --brand-primary: var(--admin-gold);
@@ -1524,6 +1182,7 @@ const closeCategoryForm = () => {
   --brand-accent: var(--admin-gold);
   --brand-accent-alt: rgba(215, 172, 67, 0.95);
   --brand-accent-glow: rgba(201, 168, 89, 0.35);
+  --brand-success: var(--admin-emerald);
   --brand-gradient: linear-gradient(135deg, var(--brand-bg-start) 0%, var(--brand-bg-end) 100%);
   --brand-accent-gradient: linear-gradient(135deg, var(--admin-gold) 0%, var(--admin-gold-deep) 100%);
 
@@ -1543,6 +1202,7 @@ const closeCategoryForm = () => {
   background: var(--brand-gradient);
   padding: 20px;
   color: var(--brand-primary-contrast);
+  overflow-x: hidden;
 }
 
 .dashboard-header {
@@ -1607,7 +1267,7 @@ const closeCategoryForm = () => {
 
 .stat-icon {
   font-size: 2.5rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--admin-emerald) 0%, var(--admin-emerald-deep) 100%);
   border-radius: 50%;
   width: 70px;
   height: 70px;
@@ -1671,9 +1331,11 @@ const closeCategoryForm = () => {
 .content-section {
   background: var(--brand-surface);
   border-radius: 20px;
-  padding: 30px;
+  padding: 3px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border: 1px solid var(--brand-border);
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .section-header {
@@ -1775,6 +1437,32 @@ const closeCategoryForm = () => {
   gap: 20px;
 }
 
+/* En celular: 2 productos por fila */
+@media (max-width: 640px) {
+  .filters-row {
+    padding: 0 6px;
+  }
+
+  .filter-group {
+    max-width: none;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .product-card {
+    padding: 14px;
+  }
+
+  .product-meta {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+}
+
 .product-card {
   background: var(--brand-bg-end);
   border-radius: 16px;
@@ -1791,7 +1479,7 @@ const closeCategoryForm = () => {
 
 .product-image {
   width: 100%;
-  height: 150px;
+  height: 230px;
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 15px;
@@ -1799,6 +1487,13 @@ const closeCategoryForm = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* En celular, mantener altura más baja (esta regla va después para que no la sobreescriba la base) */
+@media (max-width: 640px) {
+  .product-image {
+    height: 130px;
+  }
 }
 
 .product-image img {
@@ -1847,21 +1542,154 @@ const closeCategoryForm = () => {
 }
 
 .status.available {
-  background: rgba(201, 168, 89, 0.14);
-  color: rgba(215, 172, 67, 0.95);
-  border: 1px solid rgba(201, 168, 89, 0.22);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .status.out-of-stock {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(201, 168, 89, 0.22);
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .status.coming-soon {
-  background: rgba(201, 168, 89, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(201, 168, 89, 0.22);
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+/* Botones de acciones (Editar/Eliminar) */
+.btn-edit:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #ecfdf5;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fff;
+}
+
+/* Filtros */
+.filters-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 1.5rem;
+}
+
+.filter-group {
+  width: 100%;
+  max-width: 600px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: var(--brand-accent-alt);
+  font-size: 0.9rem;
+}
+
+.filter-select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-bg-end);
+  color: var(--brand-primary-contrast);
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* Por defecto (desktop): usar select nativo */
+.native-select {
+  display: block;
+}
+
+.custom-select {
+  position: relative;
+  width: 100%;
+  display: none;
+}
+
+.filter-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.filter-select-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-select-caret {
+  flex: 0 0 auto;
+  opacity: 0.9;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 50vh;
+  overflow: auto;
+  background: var(--brand-bg-end);
+  border: 1px solid var(--brand-border);
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 100;
+}
+
+.filter-dropdown-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--brand-primary-contrast);
+  cursor: pointer;
+  white-space: normal;
+}
+
+.filter-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.filter-dropdown-item.active {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+/* Móvil: esconder select nativo y usar dropdown controlado */
+@media (max-width: 640px) {
+  .native-select {
+    display: none;
+  }
+
+  .custom-select {
+    display: block;
+  }
+}
+
+.filter-select:focus {
+  border-color: var(--brand-success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 .product-actions {
@@ -1963,8 +1791,8 @@ const closeCategoryForm = () => {
   border-left-color: var(--brand-primary);
   border-radius: 50%;
   width: 50px;
-  height: 50px;
   animation: spin 1s linear infinite;
+  min-width: 0;
   margin: 0 auto;
 }
 
@@ -1990,99 +1818,45 @@ const closeCategoryForm = () => {
   color: var(--brand-accent-alt);
 }
 
-/* === SELECTOR DE COLORES === */
-.colors-selector {
+/* === SELECTOR DE MATERIAL === */
+.materials-selector {
   margin-top: 10px;
 }
 
-.colors-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 12px;
-  margin-bottom: 15px;
+.materials-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.color-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 10px;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.material-option {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--brand-border);
   background: rgba(255, 255, 255, 0.05);
-}
-
-.color-option:hover {
-  border-color: rgba(96, 165, 250, 0.5);
-  background: rgba(96, 165, 250, 0.1);
-}
-
-.color-option.selected {
-  border-color: #60a5fa;
-  background: rgba(96, 165, 250, 0.25);
-  transform: scale(1.05);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
-}
-
-.color-option.selected .color-circle {
-  border-color: #60a5fa;
-  border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.color-option.selected .color-name {
-  color: #60a5fa;
-  font-weight: 700;
-}
-
-.color-circle {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.check-icon {
-  font-size: 18px;
-  font-weight: bold;
-  color: #ffffff;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.5);
-  position: absolute;
-  animation: checkPop 0.3s ease;
-}
-
-@keyframes checkPop {
-  0% {
-    transform: scale(0);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.color-name {
-  font-size: 0.75rem;
-  font-weight: 500;
   color: var(--brand-primary-contrast);
-  text-align: center;
-  line-height: 1.2;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.selected-colors {
+.material-option:hover {
+  border-color: var(--admin-emerald);
+  background: rgba(16, 185, 129, 0.12);
+  transform: translateY(-1px);
+}
+
+.material-option.selected {
+  border-color: var(--admin-emerald);
+  background: rgba(16, 185, 129, 0.18);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+.selected-materials {
   padding: 10px 12px;
-  background: rgba(96, 165, 250, 0.1);
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
   border-radius: 8px;
   margin-top: 10px;
 }
@@ -2096,6 +1870,20 @@ const closeCategoryForm = () => {
 .selected-list {
   color: var(--brand-primary-contrast);
   font-size: 0.85rem;
+}
+
+.image-url-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.image-url-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 6px;
 }
 
 /* Botones */
@@ -2112,13 +1900,13 @@ const closeCategoryForm = () => {
   text-decoration: none;
 }
 
-.btn-primary {
+.btn.btn-primary {
   background: var(--brand-accent-gradient);
   color: var(--admin-ink);
   box-shadow: 0 10px 30px rgba(201, 168, 89, 0.28);
 }
 
-.btn-primary:hover {
+.btn.btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 18px 46px rgba(201, 168, 89, 0.32);
   background: linear-gradient(135deg, rgba(215, 172, 67, 1) 0%, rgba(201, 168, 89, 1) 100%);
@@ -2141,6 +1929,31 @@ const closeCategoryForm = () => {
 
 .btn-danger:hover {
   background: rgba(201, 168, 89, 0.22);
+}
+
+/* Hover específico para acciones de producto (Editar/Eliminar) */
+.product-actions .btn.btn-secondary:hover {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: var(--brand-success);
+}
+
+.product-actions .btn.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: var(--brand-danger);
+}
+
+.category-actions .btn.btn-secondary:hover {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: var(--brand-success);
+}
+
+.category-actions .btn.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: var(--brand-danger);
 }
 
 .btn-sm {
@@ -2483,9 +2296,17 @@ const closeCategoryForm = () => {
 }
 
 .discount-badge {
-  color: var(--brand-success);
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: rgba(255, 255, 255, 0.96);
+  font-weight: 700;
   font-size: 0.9rem;
+  line-height: 1.1;
 }
 
 .form-actions {
@@ -2571,8 +2392,8 @@ const closeCategoryForm = () => {
   }
 
   .products-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .product-card {
@@ -2851,12 +2672,12 @@ const closeCategoryForm = () => {
 
 .color-dot-small {
   width: 10px;
+  max-width: 100%;
   height: 10px;
   border-radius: 50%;
   border: 1.5px solid #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
-
 /* Estilos para cantidad mejorada */
 .quantity-info {
   display: flex;
@@ -3047,6 +2868,10 @@ const closeCategoryForm = () => {
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .showcase-status {
@@ -3054,6 +2879,11 @@ const closeCategoryForm = () => {
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .showcase-status.available {
@@ -3274,7 +3104,7 @@ const closeCategoryForm = () => {
 
   .product-description {
     font-size: 0.8rem;
-    line-height: 1.3;
+    line-height: 1.1;
   }
 
   .price {

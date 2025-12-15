@@ -36,22 +36,21 @@
           <div class="qv-meta">{{ categoryLabel }}</div>
 
           <div class="qv-price">
-            <span class="qv-price-current">${{ formatPrice(product.price) }}</span>
-            <span v-if="product.originalPrice" class="qv-price-original">${{ formatPrice(product.originalPrice) }}</span>
+            <span class="qv-price-current">${{ formatPrice(product.price) }} COP</span>
+            <span v-if="product.originalPrice" class="qv-price-original">${{ formatPrice(product.originalPrice) }} COP</span>
           </div>
 
           <div v-if="product.description" class="qv-description">{{ product.description }}</div>
 
           <div v-if="product.colors?.length" class="qv-colors">
-            <div class="qv-colors-title">Seleccionar color</div>
+            <div class="qv-colors-title">Características</div>
             <div class="qv-colors-list">
               <button
                 v-for="c in product.colors"
                 :key="c"
                 type="button"
-                class="qv-color"
-                :class="{ active: selectedColor === c }"
-                @click="selectedColor = c"
+                class="qv-color active"
+                disabled
               >
                 {{ c }}
               </button>
@@ -115,7 +114,6 @@ const isAddDisabled = computed(() => {
   const p = props.product
   if (!p) return true
   if (p.status !== 'available') return true
-  if (p.colors && p.colors.length > 0 && !selectedColor.value) return true
   return false
 })
 
@@ -153,7 +151,15 @@ const addToCartFromModal = () => {
     image: props.product.images?.[0] || ''
   }
 
-  addToCart(mapped, 1, selectedColor.value || undefined)
+  // Construir características del producto
+  const characteristics: string[] = []
+  if (props.product.colors && props.product.colors.length > 0) {
+    // Agregar todos los colores disponibles
+    characteristics.push(...props.product.colors)
+  }
+  const colorRef = props.product.colors?.[0] || undefined
+
+  addToCart(mapped, 1, colorRef, characteristics)
   emit('close')
 }
 

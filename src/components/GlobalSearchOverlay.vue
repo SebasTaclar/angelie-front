@@ -82,7 +82,7 @@
             <div class="result-info">
               <div class="result-name">{{ product.name }}</div>
               <div class="result-category">{{ categoryNameById(product.category).toUpperCase() }}</div>
-              <div class="result-price">${{ formatPrice(product.price) }}</div>
+              <div class="result-price">${{ formatPrice(product.price) }} COP</div>
             </div>
           </button>
         </div>

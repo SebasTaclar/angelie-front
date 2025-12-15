@@ -28,9 +28,13 @@
               >
               <div class="item-details">
                 <h3>{{ item.name }}</h3>
-                <p v-if="item.selectedColor" class="item-color">Color: {{ item.selectedColor }}</p>
+                <div v-if="item.characteristics && item.characteristics.length > 0" class="item-characteristics">
+                  <span v-for="(char, index) in item.characteristics" :key="index" class="item-char-badge">
+                    {{ char }}
+                  </span>
+                </div>
                 <p class="item-quantity">Cantidad: {{ item.quantity }}</p>
-                <p class="item-price">${{ (item.price * item.quantity).toLocaleString() }}</p>
+                <p class="item-price">${{ (item.price * item.quantity).toLocaleString() }} COP</p>
               </div>
             </div>
 
@@ -43,7 +47,7 @@
           <div v-if="cartItems.length > 0" class="order-total">
             <div class="total-row">
               <span>{{ t('checkout.subtotal') }}:</span>
-              <span>${{ totalPrice.toLocaleString() }}</span>
+              <span>${{ totalPrice.toLocaleString() }} COP</span>
             </div>
             <div class="total-row">
               <span>{{ t('checkout.shipping') }}:</span>
@@ -670,6 +674,25 @@ const goToHome = () => {
   color: rgb(201, 168, 89);
   margin: 0.25rem 0;
   font-weight: 500;
+}
+
+.item-characteristics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+
+.item-char-badge {
+  font-size: 0.75rem;
+  color: rgba(246, 245, 241, 0.95);
+  background: rgba(201, 168, 89, 0.2);
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  display: inline-block;
+  font-weight: 600;
+  border: 1px solid rgba(201, 168, 89, 0.3);
+  text-transform: lowercase;
 }
 
 .item-price {

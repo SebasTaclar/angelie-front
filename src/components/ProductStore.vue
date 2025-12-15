@@ -47,7 +47,7 @@
         <div class="store-category-header">
           <button
             type="button"
-            class="store-nav"
+            class="store-nav-header store-nav-header-left"
             aria-label="Mover a la izquierda"
             @click="scrollCategory(section.slug, -1)"
           >
@@ -67,7 +67,7 @@
 
           <button
             type="button"
-            class="store-nav"
+            class="store-nav-header store-nav-header-right"
             aria-label="Mover a la derecha"
             @click="scrollCategory(section.slug, 1)"
           >
@@ -75,13 +75,23 @@
           </button>
         </div>
 
-        <div class="store-carousel" :ref="(el) => setCarouselRef(section.slug, el)">
-          <div
-            v-for="product in section.products"
-            :key="product.id"
-            class="product-card"
-            @click="openProductModal(product)"
+        <div class="store-carousel-wrapper">
+          <button
+            type="button"
+            class="store-nav store-nav-left"
+            aria-label="Mover a la izquierda"
+            @click="scrollCategory(section.slug, -1)"
           >
+            ‹
+          </button>
+
+          <div class="store-carousel" :ref="(el) => setCarouselRef(section.slug, el)">
+            <div
+              v-for="product in section.products"
+              :key="product.id"
+              class="product-card"
+              @click="openProductModal(product)"
+            >
             <!-- Categoría encima de la imagen -->
             <span class="product-category-top">{{ categoryNameById(product.category) }}</span>
 
@@ -118,13 +128,43 @@
 
               <!-- Precios -->
               <div class="price-section">
-                <span class="current-price">${{ product.price.toLocaleString() }}</span>
-                <span v-if="product.originalPrice" class="original-price">
-                  ${{ product.originalPrice.toLocaleString() }}
-                </span>
+                <div class="price-wrapper">
+                  <span class="current-price">${{ product.price.toLocaleString() }} COP</span>
+                  <span v-if="product.originalPrice" class="original-price">
+                    ${{ product.originalPrice.toLocaleString() }} COP
+                  </span>
+                  <span v-if="product.originalPrice && product.originalPrice > product.price" class="discount-badge">
+                    -{{ Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) }}%
+                  </span>
+                </div>
               </div>
+
+              <!-- Botón de agregar al carrito -->
+              <button
+                v-if="product.status === 'available'"
+                @click.stop="addToCartFromCard($event, product)"
+                class="add-to-cart-btn"
+                :disabled="product.status !== 'available'"
+              >
+                <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span>Agregar</span>
+              </button>
+            </div>
             </div>
           </div>
+
+          <button
+            type="button"
+            class="store-nav store-nav-right"
+            aria-label="Mover a la derecha"
+            @click="scrollCategory(section.slug, 1)"
+          >
+            ›
+          </button>
         </div>
       </div>
 
@@ -485,12 +525,16 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProducts, type Product as ProductType } from '@/composables/useProducts'
 import { useProductQuickView } from '@/composables/useProductQuickView'
+import { useCart } from '@/composables/useCart'
 
 // Router
 const router = useRouter()
 
 // Modal global de quick view (estilo joyería, reutilizado en toda la app)
 const quickView = useProductQuickView()
+
+// Carrito de compras
+const { addToCart } = useCart()
 
 // Usar el composable de productos
 const {
@@ -526,11 +570,11 @@ const searchTerm = ref('')
 // Productos y categorías desde el composable
 const products = computed(() => availableProducts.value)
 
-// Función para determinar si la descripción es lo suficientemente larga (más de 4 líneas aprox 150 caracteres)
+// Función para determinar si la descripción es lo suficientemente larga (más de 2 líneas aprox 60 caracteres)
 const shouldShowReadMore = (description: string) => {
-  // Aproximación: 4 líneas en card ~ 120-140 caracteres (depende del ancho).
-  // Queremos mostrar "Ver más" cuando el clamp a 4 líneas recorta el texto.
-  return (description || '').trim().length > 120
+  // Aproximación: 2 líneas en card ~ 60-70 caracteres (depende del ancho).
+  // Queremos mostrar "Ver más" cuando el clamp a 2 líneas recorta el texto.
+  return (description || '').trim().length > 60
 }
 
 // Función para abrir modal del producto (global)
@@ -675,6 +719,33 @@ function goToCategory(slug: string) {
   router.push('/')
 }
 
+// Función para agregar al carrito desde la tarjeta
+const addToCartFromCard = (event: Event, product: ProductType) => {
+  event.stopPropagation() // Evitar que se abra el modal
+  
+  if (product.status !== 'available') {
+    return
+  }
+  
+  // Construir características del producto
+  const characteristics: string[] = []
+  if (product.colors && product.colors.length > 0) {
+    // Agregar todos los colores disponibles
+    characteristics.push(...product.colors)
+  }
+  
+  addToCart({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    image: product.images[0],
+    category: categoryNameById(product.category),
+    description: product.description,
+    inStock: product.status === 'available',
+    originalPrice: product.originalPrice
+  }, 1, product.colors?.[0], characteristics)
+}
+
 // Colores/materiales (joyería) + fallback compatible con nombres comunes
 // (Reservado) Helpers de colores para joyería.
 </script>
@@ -703,7 +774,7 @@ function goToCategory(slug: string) {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
 }
@@ -847,6 +918,11 @@ function goToCategory(slug: string) {
   margin: 0.75rem 0 1rem;
 }
 
+.store-carousel-wrapper {
+  position: relative;
+  padding: 0 3rem;
+}
+
 .store-category-title-wrap {
   display: flex;
   flex-direction: column;
@@ -874,12 +950,57 @@ function goToCategory(slug: string) {
 
 .store-nav {
   appearance: none;
+  background: white;
+  border: 2px solid var(--brand-success);
+  padding: 0.5rem 0.8rem;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  color: var(--brand-success);
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.store-nav:hover {
+  background: var(--brand-success);
+  color: white;
+  transform: translateY(-50%) scale(1.15);
+  box-shadow: 0 6px 20px rgba(201, 168, 89, 0.4);
+}
+
+.store-nav-left {
+  left: 0;
+}
+
+.store-nav-right {
+  right: 0;
+}
+
+.store-nav-header {
+  appearance: none;
   background: transparent;
   border: none;
   padding: 0.25rem 0.4rem;
   font-size: 1.8rem;
   line-height: 1;
   cursor: pointer;
+  color: rgba(7, 30, 37, 0.92);
+  transition: all 0.3s ease;
+}
+
+.store-nav-header:hover {
+  color: var(--brand-success);
+  transform: scale(1.2);
 }
 
 .store-carousel {
@@ -890,10 +1011,18 @@ function goToCategory(slug: string) {
   scroll-snap-type: x mandatory;
   scroll-padding: 0.5rem;
   padding-bottom: 0.5rem;
+  /* Ocultar scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Ocultar scrollbar en Chrome/Safari */
+.store-carousel::-webkit-scrollbar {
+  display: none;
 }
 
 .store-carousel > .product-card {
-  flex: 0 0 calc((100% - 0.6rem) / 4);
+  flex: 0 0 calc((100% - 3.3rem) / 4);
   scroll-snap-align: start;
 }
 
@@ -910,23 +1039,16 @@ function goToCategory(slug: string) {
 }
 
 @media (max-width: 520px) {
-  /* Header de categoría estilo móvil (como la referencia): flechas a los lados y texto centrado */
-  .store-category-header {
-    width: 100%;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0 0.25rem;
-  }
-
-  .store-category-title-wrap {
-    flex: 1;
-    min-width: 0;
+  .store-carousel-wrapper {
+    padding: 0;
   }
 
   .store-nav {
-    flex: 0 0 auto;
-    align-self: flex-start;
+    display: none;
+  }
+
+  .store-nav-header {
+    font-size: 1.6rem;
   }
 
   .store-carousel {
@@ -938,7 +1060,7 @@ function goToCategory(slug: string) {
 
   .store-carousel > .product-card {
     /* En celular: que se vean 2 cards a la vez */
-    flex-basis: calc((100% - 0.4rem) / 2);
+    flex-basis: calc((100% - 1.65rem) / 2);
   }
 }
 
@@ -1072,6 +1194,7 @@ function goToCategory(slug: string) {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 500px;
   cursor: pointer;
 }
 
@@ -1148,7 +1271,7 @@ function goToCategory(slug: string) {
 }
 
 .product-description p {
-  line-height: 1.5;
+  line-height: 1.0;
   text-align: justify;
   hyphens: auto;
   margin: 0;
@@ -1157,12 +1280,12 @@ function goToCategory(slug: string) {
 
 .product-description p.truncated {
   display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: calc(1.5em * 4); /* 4 líneas con line-height 1.5 */
+  max-height: calc(1.5em * 2); /* 2 líneas con line-height 1.5 */
 }
 
 .read-more-btn {
@@ -1172,8 +1295,6 @@ function goToCategory(slug: string) {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0.4rem 0;
-  margin-top: 0.3rem;
   transition: all 0.2s ease;
   text-decoration: underline;
   display: inline-block;
@@ -1230,8 +1351,14 @@ function goToCategory(slug: string) {
 
 .price-section {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.price-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 
 .current-price {
@@ -1246,10 +1373,100 @@ function goToCategory(slug: string) {
   color: #999;
 }
 
+/* Botón de agregar al carrito */
+.add-to-cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: auto;
+  padding: 0.65rem 1rem;
+  background: linear-gradient(135deg, #1a3a52, #0f2437);
+  color: #ffffff;
+  border: 1px solid rgba(26, 58, 82, 0.3);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(26, 58, 82, 0.3);
+}
+
+.add-to-cart-btn:hover {
+  background: linear-gradient(135deg, #0f2437, #1a3a52);
+  border-color: rgba(26, 58, 82, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 58, 82, 0.4);
+}
+
+.add-to-cart-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.add-to-cart-btn:disabled {
+  background: linear-gradient(135deg, #cccccc, #999999);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.add-to-cart-btn .cart-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+.discount-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 0.4rem;
+  margin-left: 0.5rem;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.availability-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.availability-badge.status-available {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.availability-badge.status-out-of-stock {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.availability-badge.status-coming-soon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.availability-badge.status-unavailable {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+}
+
 /* Móvil: cards compactas (descripción/precios más pequeños y sin overflow) */
 @media (max-width: 520px) {
   .product-card {
     min-width: 0;
+    min-height: 80px;
   }
 
   .product-image {
@@ -1258,6 +1475,9 @@ function goToCategory(slug: string) {
 
   .product-info {
     padding: 0.55rem 0.65rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
   }
 
   .product-name {
@@ -1291,6 +1511,10 @@ function goToCategory(slug: string) {
   .price-section {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .price-wrapper {
     gap: 0.1rem;
   }
 
@@ -1309,9 +1533,38 @@ function goToCategory(slug: string) {
   .original-price {
     font-size: 0.82rem;
   }
+
+  .discount-badge,
+  .availability-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .add-to-cart-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    margin-top: auto;
+  }
+
+  .add-to-cart-btn .cart-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .add-to-cart-btn span {
+    display: none;
+  }
+
+  .add-to-cart-btn::after {
+    content: 'Agregar';
+  }
 }
 
 @media (max-width: 400px) {
+  .product-card {
+    min-height: 370px;
+  }
+
   .product-image {
     height: 175px;
   }

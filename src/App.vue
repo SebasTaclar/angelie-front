@@ -43,17 +43,6 @@
         <div class="lang-switch" aria-label="Language switch">
           <button
             class="lang-btn"
-            :class="{ active: locale === 'es' }"
-            type="button"
-            :aria-label="locale === 'es' ? 'Idioma: Español (seleccionado)' : 'Cambiar a Español'"
-            title="Español"
-            @click="setLanguage('es')"
-          >
-            <img class="flag-icon" src="/icons/flags/co.svg" alt="" aria-hidden="true" />
-            <span class="sr-only">Español</span>
-          </button>
-          <button
-            class="lang-btn"
             :class="{ active: locale === 'en' }"
             type="button"
             :aria-label="locale === 'en' ? 'Language: English (selected)' : 'Switch to English'"
@@ -62,6 +51,17 @@
           >
             <img class="flag-icon" src="/icons/flags/us.svg" alt="" aria-hidden="true" />
             <span class="sr-only">English</span>
+          </button>
+          <button
+            class="lang-btn"
+            :class="{ active: locale === 'es' }"
+            type="button"
+            :aria-label="locale === 'es' ? 'Idioma: Español (seleccionado)' : 'Cambiar a Español'"
+            title="Español"
+            @click="setLanguage('es')"
+          >
+            <img class="flag-icon" src="/icons/flags/co.svg" alt="" aria-hidden="true" />
+            <span class="sr-only">Español</span>
           </button>
         </div>
 
@@ -74,21 +74,48 @@
       </div>
 
       <!-- Menu hamburguesa para mobile -->
-      <button
-        v-if="showHeaderSearch"
-        type="button"
-        class="search-toggle mobile-only"
-        aria-label="Abrir buscador"
-        title="Buscar"
-        @click="openSearch"
-      >
-        <svg class="search-toggle-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M10 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm8.707 17.293-4.387-4.387a9 9 0 1 0-1.414 1.414l4.387 4.387a1 1 0 0 0 1.414-1.414z"
-          />
-        </svg>
-      </button>
+      <div class="mobile-header-controls">
+        <button
+          v-if="showHeaderSearch"
+          type="button"
+          class="search-toggle mobile-only"
+          aria-label="Abrir buscador"
+          title="Buscar"
+          @click="openSearch"
+        >
+          <svg class="search-toggle-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M10 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm8.707 17.293-4.387-4.387a9 9 0 1 0-1.414 1.414l4.387 4.387a1 1 0 0 0 1.414-1.414z"
+            />
+          </svg>
+        </button>
+
+        <div class="lang-switch mobile-header" aria-label="Language switch">
+          <button
+            class="lang-btn"
+            :class="{ active: locale === 'en' }"
+            type="button"
+            :aria-label="locale === 'en' ? 'Language: English (selected)' : 'Switch to English'"
+            title="English"
+            @click="setLanguage('en')"
+          >
+            <img class="flag-icon" src="/icons/flags/us.svg" alt="" aria-hidden="true" />
+            <span class="sr-only">English</span>
+          </button>
+          <button
+            class="lang-btn"
+            :class="{ active: locale === 'es' }"
+            type="button"
+            :aria-label="locale === 'es' ? 'Idioma: Español (seleccionado)' : 'Cambiar a Español'"
+            title="Español"
+            @click="setLanguage('es')"
+          >
+            <img class="flag-icon" src="/icons/flags/co.svg" alt="" aria-hidden="true" />
+            <span class="sr-only">Español</span>
+          </button>
+        </div>
+      </div>
 
       <button class="hamburger-menu" @click="toggleMobileMenu" :class="{ 'active': isMobileMenuOpen }">
         <span></span>
@@ -109,30 +136,6 @@
           </div>
 
           <div class="mobile-controls">
-            <div class="lang-switch mobile" aria-label="Language switch">
-              <button
-                class="lang-btn"
-                :class="{ active: locale === 'es' }"
-                type="button"
-                :aria-label="locale === 'es' ? 'Idioma: Español (seleccionado)' : 'Cambiar a Español'"
-                title="Español"
-                @click="setLanguage('es'); closeMobileMenu()"
-              >
-                <img class="flag-icon" src="/icons/flags/co.svg" alt="" aria-hidden="true" />
-                <span class="sr-only">Español</span>
-              </button>
-              <button
-                class="lang-btn"
-                :class="{ active: locale === 'en' }"
-                type="button"
-                :aria-label="locale === 'en' ? 'Language: English (selected)' : 'Switch to English'"
-                title="English"
-                @click="setLanguage('en'); closeMobileMenu()"
-              >
-                <img class="flag-icon" src="/icons/flags/us.svg" alt="" aria-hidden="true" />
-                <span class="sr-only">English</span>
-              </button>
-            </div>
             <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">
               {{ t('auth.access') }}
             </RouterLink>
@@ -281,7 +284,7 @@ watch(route, () => {
 
 <style scoped>
 .navbar {
-  background: linear-gradient(180deg, #1a3a52 0%, #0f2437 100%);
+  background: #ffffff;
   margin: 0;
   width: 100%;
   display: flex;
@@ -293,29 +296,30 @@ watch(route, () => {
   z-index: 1000;
   height: 75px;
   padding: 0 clamp(20px, 5vw, 60px);
-  box-shadow: 0 2px 24px rgba(212, 175, 55, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .search-toggle {
   width: 42px;
   height: 42px;
   border-radius: 999px;
-  border: 1px solid rgba(201, 168, 89, 0.28);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(246, 245, 241, 0.92);
+  border: 1px solid rgba(26, 58, 82, 0.2);
+  background: rgba(26, 58, 82, 0.05);
+  color: #1a3a52;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .search-toggle:hover {
-  background: rgba(201, 168, 89, 0.16);
-  border-color: rgba(201, 168, 89, 0.5);
+  background: rgba(201, 168, 89, 0.15);
+  border-color: rgb(201, 168, 89);
+  color: rgb(201, 168, 89);
 }
 
 .search-toggle:active {
@@ -324,6 +328,22 @@ watch(route, () => {
 
 .search-toggle.mobile-only {
   display: none;
+}
+
+.mobile-header-controls {
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.lang-switch.mobile-header {
+  display: none;
+  flex-direction: row;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(26, 58, 82, 0.05);
+  border: 1px solid rgba(26, 58, 82, 0.15);
 }
 
 
@@ -405,17 +425,16 @@ watch(route, () => {
 }
 
 .brand-title .highlight {
-  background: linear-gradient(135deg, var(--white) 0%, rgb(201, 168, 89) 100%);
+  background: linear-gradient(135deg, #1a3a52 0%, rgb(201, 168, 89) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 2px 8px rgba(201, 168, 89, 0.3);
-  filter: drop-shadow(0 2px 8px rgba(201, 168, 89, 0.3));
+  filter: drop-shadow(0 1px 2px rgba(201, 168, 89, 0.2));
 }
 
 .brand-tagline {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(26, 58, 82, 0.6);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -433,13 +452,13 @@ watch(route, () => {
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 10px;
   margin-left: auto;
   margin-right: 30px;
 }
 
 .nav-link {
-  color: rgba(255, 255, 255, 0.85);
+  color: #1a3a52;
   text-decoration: none;
   font-weight: 600;
   font-size: 15px;
@@ -448,6 +467,16 @@ watch(route, () => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   letter-spacing: 0.3px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.nav-link:focus {
+  outline: none;
+}
+
+.nav-link:focus-visible {
+  box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.15);
 }
 
 .nav-link::after {
@@ -458,27 +487,29 @@ watch(route, () => {
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background: rgb(201, 168, 89);
+  background: #1a3a52;
   transition: width 0.3s ease;
 }
 
 .nav-link:hover {
-  color: var(--white);
+  color: rgb(201, 168, 89);
   background-color: rgba(201, 168, 89, 0.1);
   transform: translateY(-2px);
 }
 
 .nav-link:hover::after {
   width: 70%;
+  background: rgb(201, 168, 89);
 }
 
 .nav-link.active {
   color: rgb(201, 168, 89);
-  background: rgba(201, 168, 89, 0.15);
+  background: rgba(201, 168, 89, 0.12);
 }
 
 .nav-link.active::after {
   width: 70%;
+  background: rgb(201, 168, 89);
 }
 
 .share-btn {
@@ -503,12 +534,12 @@ watch(route, () => {
 
 .lang-switch {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
   padding: 6px;
-  border-radius: 12px;
-  background: rgba(201, 168, 89, 0.12);
-  border: 1px solid rgba(201, 168, 89, 0.25);
+  border-radius: 12p6, 58, 82, 0.05;
+  border: 1px solid rgba(26, 58, 82, 0.15);
 }
 
 .lang-switch.mobile {
@@ -518,9 +549,9 @@ watch(route, () => {
 
 .lang-btn {
   appearance: none;
-  border: 1px solid rgba(201, 168, 89, 0.25);
-  background: rgba(0, 0, 0, 0.12);
-  color: rgba(246, 245, 241, 0.95);
+  border: 1px solid rgba(26, 58, 82, 0.15);
+  background: rgba(26, 58, 82, 0.05);
+  color: #1a3a52;
   border-radius: 10px;
   padding: 6px 10px;
   font-weight: 800;
@@ -538,7 +569,7 @@ watch(route, () => {
   height: 12px;
   display: block;
   border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(201, 168, 89, 0.18);
+  box-shadow: 0 0 0 1px rgba(26, 58, 82, 0.1);
 }
 
 .sr-only {
@@ -554,12 +585,14 @@ watch(route, () => {
 }
 
 .lang-btn:hover {
-  border-color: rgba(201, 168, 89, 0.5);
-  background: rgba(201, 168, 89, 0.12);
+  background: rgba(201, 168, 89, 0.15);
+  color: rgb(201, 168, 89.3);
+  background: rgba(26, 58, 82, 0.1);
 }
 
 .lang-btn.active {
-  border-color: rgba(201, 168, 89, 0.85);
+  border-color: rgb(201, 168, 89);
+  background: rgba(201, 168, 89, 0.15.85);
   background: rgba(201, 168, 89, 0.2);
   color: rgb(201, 168, 89);
 }
@@ -611,6 +644,8 @@ watch(route, () => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(201, 168, 89, 0.3);
   font-weight: 700;
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .admin-btn:hover {
@@ -634,15 +669,10 @@ watch(route, () => {
 }
 
 .user-greeting {
-  color: var(--white);
-  font-weight: 700;
+  color: #1a3a52;
+  font-weight: 600;
   font-size: 14px;
-  padding: 10px 16px;
-  background: rgba(201, 168, 89, 0.15);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(201, 168, 89, 0.3);
-  letter-spacing: 0.3px;
+  margin-right: 10px;
 }
 
 /* Menu hamburguesa */
@@ -664,7 +694,7 @@ watch(route, () => {
   display: block;
   height: 3px;
   width: 100%;
-  background-color: var(--brand-primary-contrast);
+  background-color: #1a3a52;
   border-radius: 3px;
   transition: all 0.3s ease;
 }
@@ -724,6 +754,16 @@ watch(route, () => {
   text-align: center;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.mobile-link:focus {
+  outline: none;
+}
+
+.mobile-link:focus-visible {
+  box-shadow: 0 0 0 3px rgba(201, 168, 89, 0.35);
 }
 
 .mobile-link:hover {
@@ -804,7 +844,15 @@ watch(route, () => {
     display: flex;
   }
 
+  .mobile-header-controls {
+    display: flex;
+  }
+
   .search-toggle.mobile-only {
+    display: inline-flex;
+  }
+
+  .lang-switch.mobile-header {
     display: inline-flex;
   }
 
@@ -863,24 +911,13 @@ watch(route, () => {
 }
 
 /* Estilos para enlaces activos */
-.nav-link.active,
+/* Nota: el subrayado del link activo en desktop ya lo maneja
+   `.nav-link::after` + `.nav-link.active::after` (centrado).
+   Aquí sólo damos estado activo al menú mobile sin subrayado extra. */
 .mobile-link.active {
-  color: #0071e3;
-  font-weight: 600;
-  position: relative;
-}
-
-.nav-link.active::after,
-.mobile-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #0071e3;
-  border-radius: 2px;
-  animation: fadeIn 0.3s ease-in-out;
+  color: rgb(201, 168, 89);
+  border-color: rgba(201, 168, 89, 0.35);
+  background: rgba(201, 168, 89, 0.12);
 }
 
 @keyframes fadeIn {

@@ -42,10 +42,14 @@
             <div v-for="item in cartItems" :key="`${item.id}-${item.selectedColor || 'default'}`" class="cart-item">
               <img :src="item.image" :alt="item.name" />
               <div class="item-details">
-                <h4>{{ item.name }}</h4>
-                <span class="item-category">{{ item.category }}</span>
-                <span v-if="item.selectedColor" class="item-color">Color: {{ item.selectedColor }}</span>
-                <div class="item-price">${{ item.price.toLocaleString() }}</div>
+                <h4 class="item-title">{{ item.name }}</h4>
+                <span v-if="item.category && isNaN(Number(item.category))" class="item-category">{{ item.category }}</span>
+                <div v-if="item.characteristics && item.characteristics.length > 0" class="item-characteristics">
+                  <span v-for="(char, index) in item.characteristics" :key="index" class="item-char-badge">
+                    {{ char }}
+                  </span>
+                </div>
+                <div class="item-price">${{ item.price.toLocaleString() }} COP</div>
               </div>
 
               <div class="item-controls">
@@ -88,7 +92,7 @@
 
         <div v-if="cartItems.length > 0" class="cart-footer">
           <div class="cart-total-display">
-            <strong>Total: ${{ totalPrice.toLocaleString() }}</strong>
+            <strong>Total: ${{ totalPrice.toLocaleString() }} COP</strong>
           </div>
           <div class="cart-actions">
             <button type="button" @click="clearCart" class="btn-clear">Limpiar carrito</button>
@@ -338,6 +342,12 @@ const goToCheckout = () => {
   flex: 1;
 }
 
+.item-details .item-title {
+  margin: 0 0 0.25rem;
+  color: rgba(255, 255, 255, 0.96);
+  text-transform: uppercase;
+}
+
 .item-details h4 {
   margin: 0 0 0.25rem;
   color: rgba(255, 255, 255, 0.96);
@@ -347,6 +357,7 @@ const goToCheckout = () => {
   font-size: 0.9rem;
   color: rgba(201, 168, 89, 0.98);
   font-weight: 700;
+  text-transform: lowercase;
 }
 
 .item-color {
@@ -359,6 +370,25 @@ const goToCheckout = () => {
   margin-top: 0.3rem;
   font-weight: 600;
   border: 1px solid rgba(201, 168, 89, 0.2);
+}
+
+.item-characteristics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.item-char-badge {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(201, 168, 89, 0.18);
+  padding: 0.2rem 0.55rem;
+  border-radius: 10px;
+  display: inline-block;
+  font-weight: 600;
+  border: 1px solid rgba(201, 168, 89, 0.25);
+  text-transform: lowercase;
 }
 
 .item-price {
@@ -484,7 +514,7 @@ const goToCheckout = () => {
 
 @media (max-width: 768px) {
   .cart-overlay {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .floating-cart {
@@ -495,7 +525,184 @@ const goToCheckout = () => {
   }
 
   .cart-modal {
-    max-height: 88vh;
+    max-height: 95vh;
+    border-radius: 16px;
+  }
+
+  .cart-header {
+    padding: 1rem;
+  }
+
+  .cart-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .cart-content {
+    padding: 0.75rem;
+  }
+
+  .cart-item {
+    flex-wrap: wrap;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .cart-item img {
+    width: 70px;
+    height: 70px;
+  }
+
+  .item-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-details h4 {
+    font-size: 0.95rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .item-category {
+    font-size: 0.8rem;
+  }
+
+  .item-color {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .item-price {
+    font-size: 0.95rem;
+  }
+
+  .item-controls {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .quantity-controls {
+    gap: 0.4rem;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .quantity-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 0.9rem;
+  }
+
+  .remove-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cart-footer {
+    padding: 1rem;
+  }
+
+  .cart-total-display {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .cart-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-clear,
+  .btn-checkout {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cart-overlay {
+    padding: 0.25rem;
+  }
+
+  .cart-modal {
+    max-height: 97vh;
+    border-radius: 12px;
+  }
+
+  .cart-header {
+    padding: 0.75rem;
+  }
+
+  .cart-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .cart-content {
+    padding: 0.5rem;
+  }
+
+  .cart-item {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .cart-item img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .item-details h4 {
+    font-size: 0.85rem;
+  }
+
+  .item-category {
+    font-size: 0.75rem;
+  }
+
+  .item-price {
+    font-size: 0.85rem;
+  }
+
+  .quantity-controls {
+    gap: 0.3rem;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .quantity-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.85rem;
+  }
+
+  .quantity-value {
+    font-size: 0.85rem;
+    min-width: 18px;
+  }
+
+  .remove-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .remove-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .cart-footer {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .cart-total-display {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .btn-clear,
+  .btn-checkout {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
   }
 }
 </style>
